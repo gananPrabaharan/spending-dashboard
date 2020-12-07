@@ -25,7 +25,7 @@ const Navigation = () => {
                         <Link to="/transactions" className="nav-link">Transactions</Link>
                     </Nav.Item>
                     <Nav.Item>
-                        <Link to="/explore" className="nav-link">Insights</Link>
+                        <Link to="/categories" className="nav-link">Categories</Link>
                     </Nav.Item>
                     <Nav.Item>
                         <Link to="/fairness" className="nav-link">Fairness Analysis</Link>
