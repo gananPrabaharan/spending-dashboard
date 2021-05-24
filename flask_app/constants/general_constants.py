@@ -31,6 +31,7 @@ class Columns:
     DESCRIPTION = "description"
     WITHDRAWAL = "withdrawal"
     DEPOSIT = "deposit"
+    AMOUNT = "amount"
     ACCOUNT = "account"
     CATEGORY = "category"
 

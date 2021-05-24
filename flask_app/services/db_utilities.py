@@ -62,6 +62,7 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
+    insert_multiple(Tables.CATEGORIES, [[0, ""]], "IGNORE")
 
 
 def delete_table(table_name):
@@ -108,20 +109,24 @@ def execute_query(query, select_flag=False):
     return result
 
 
-def retrieve_categories():
+def retrieve_categories(id_as_key=True):
+    """
+    Retrieve dictionary mapping category id to category name
+    :param id_as_key: flag indicating whether to use the id as the key (use the name if False)
+    :return: dictionary mapping id to name, or name to id
+    """
     columns = ", ".join(Tables.CATEGORIES.columns)
     query = "SELECT " + columns + " FROM " + Tables.CATEGORIES.name
-
     query_result = execute_query(query, True)
 
-    cat_dict_list = []
+    category_dict = {}
     for cat_id, cat_name in query_result:
-        cat_dict_list.append({
-            "id": cat_id,
-            "name": cat_name
-        })
+        if id_as_key:
+            category_dict[cat_id] = cat_name
+        else:
+            category_dict[cat_name] = cat_id
 
-    return cat_dict_list
+    return category_dict
 
 
 def retrieve_from_table(table):
@@ -165,7 +170,18 @@ def update_table(table, items_list):
         query += "WHERE " + table.id_col + " = " + get_value(item_dict["id"])
 
 
-    return
+def find_transaction(transaction):
+    query = "SELECT transactionId from " + Tables.TRANSACTIONS.name + " " + \
+            "WHERE date=" + get_value(transaction.date) + " " + \
+            "AND description=" + get_value(transaction.description) + " " + \
+            "AND amount=" + get_value(transaction.amount)
+
+    results = execute_query(query, True)
+    transaction_ids = []
+    for row in results:
+        transaction_ids.append(row[0])
+
+    return transaction_ids
 
 
 def db_setup():

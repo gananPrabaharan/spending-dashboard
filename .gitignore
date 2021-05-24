@@ -130,3 +130,11 @@ dmypy.json
 
 # React
 node_modules/
+
+# folders to skip
+resources/
+database/
+
+# unnecessary files
+.DS_STORE
+.idea/

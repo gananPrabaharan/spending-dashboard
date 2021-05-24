@@ -20,35 +20,9 @@ class Table:
 
 class Tables:
     TRANSACTIONS = Table("Transactions",
-                         ["transactionId", "date", "description", "amount"],
-                         ["INTEGER", "DATE", "NVARCHAR", "NUMERIC", "INTEGER"])
+                         ["transactionId", "date", "description", "amount", "categoryId"],
+                         ["INTEGER", "DATE", "NVARCHAR", "NUMERIC", "INTEGER", "INTEGER"])
 
     CATEGORIES = Table("Categories",
                        ["categoryId", "name"],
                        ["INTEGER", "NVARCHAR UNIQUE"])
-
-    # TRANSACTIONS = {
-    #     "name": "Transactions",
-    #     "columns": ["transactionId", "date", "description", "amount"],
-    #     "id_col": "transactionId"
-    # }
-    #
-    # CATEGORIES = {
-    #     "name": "Categories",
-    #     "columns": ["categoryId", "name"]
-    # }
-
-
-# class TableDefinitions:
-#     TRANSACTION_DB_QUERY = "CREATE TABLE IF NOT EXISTS " + Tables.TRANSACTIONS["name"] + " " \
-#                                                                                          "(transactionId INTEGER PRIMARY KEY, " \
-#                                                                                          "date DATE, " \
-#                                                                                          "description NVARCHAR, " \
-#                                                                                          "amount NUMERIC, " \
-#                                                                                          "categoryId INTEGER" \
-#                                                                                          ") "
-#
-#     CATEGORIES_DB_QUERY = "CREATE TABLE IF NOT EXISTS " + Tables.CATEGORIES["name"] + " " \
-#                                                                                       "(categoryId INTEGER PRIMARY KEY, " \
-#                                                                                       "name NVARCHAR UNIQUE" \
-#                                                                                       ") "

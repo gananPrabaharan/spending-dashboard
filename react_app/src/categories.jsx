@@ -1,52 +1,48 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Container, Row, Col, Button, Form } from 'react-bootstrap'
 import { getCategoriesTableColumns } from './tableColumns'
 import { SERVER, getRequestOptions } from './util'
+import { retrieveCategories } from './data'
 import Table from './table'
+import './css/main.css'
 
+const Categories = (props) => {
+    const [state, setState] = useState({
+        categoryList: [],
+        categoryToAdd: ""
+    });
 
-class Categories extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            categoryList: [],
-            categoryToAdd: ""
+    useEffect(() => {
+        getCategories()
+    }, [])
+
+    const getCategories = async () => {
+        const catResult = await retrieveCategories();
+
+        let categoryList = [];
+        if (catResult.status === 200){
+            categoryList = catResult.data;
         }
+        const validCategories = categoryList.filter(catDict => catDict["name"].length > 0);
+        setState({...state, categoryList: validCategories, changesMade: false});
     }
 
-    componentDidMount(){
+    const addCategory = () => {
         const url = SERVER + "api/categories";
-        const options = getRequestOptions("GET");
-
-        fetch(url, options).then((response) => {
-            if (response.status === 200){
-                response.json().then((categoryList) => {
-                    this.setState({categoryList: categoryList});
-                });
-            }
-        });
-    }
-
-    addCategory(){
-        const url = SERVER + "api/categories";
-        const categoryToAdd = this.state.categoryToAdd;
         const formData = new FormData();
-        formData.append("categoryToAdd", JSON.stringify(categoryToAdd))
-
+        formData.append("categoryToAdd", JSON.stringify(state.categoryToAdd))
         const options = getRequestOptions("POST", formData);
 
         fetch(url, options).then((response) => {
             if (response.status === 200){
-                response.json().then((categoryList) => {
-                    this.setState({categoryList: categoryList, categoryToAdd: ""});
-                });
+                getCategories();
             }
         });
     }
 
-    deleteCategory = (category) => {
+    const deleteCategory = (category) => {
         const deleteId = category.id
-        const catToDelete = this.state.categoryList.find(c => c.id === deleteId);
+        const catToDelete = state.categoryList.find(c => c.id === deleteId);
         if (catToDelete != null){
             const url = SERVER + "api/categories";
             const formData = new FormData();
@@ -56,7 +52,7 @@ class Categories extends Component {
             fetch(url, options).then((response) => {
                 if (response.status === 200){
                     response.json().then((categoryList) => {
-                        this.setState({categoryList: categoryList});
+                        setState({...state, categoryList: categoryList});
                     });
                 }
             });
@@ -65,35 +61,34 @@ class Categories extends Component {
         }
     }
 
-    render(){
-        return(
-            <Container fluid>
-                <div style={{margin: "3%", paddingBottom: "20px"}}>
-                    <div style={{width: "40%"}}>
-                        <Form.Label>Category Name</Form.Label>
-
+    return(
+        <Container fluid>
+            <div style={{margin: "3%"}}>
+                <div style={{width: "40%"}}>
+                    <Form.Label>Category Name</Form.Label>
+                </div>
+                <div>
+                    <div style={{float:"left", width:"300px"}}>
+                        <Form.Control type="text"
+                            onChange={(e) => setState({...state, categoryToAdd: e.target.value})}
+                            value={state.categoryToAdd}/>
                     </div>
                     <div>
-                        <div style={{width: "20%", float:"left"}}>
-                            <Form.Control type="text"
-                                onChange={(e)=>this.setState({categoryToAdd: e.target.value})}
-                                value={this.state.categoryToAdd}/>
-                        </div>
-                        <div style={{width: "10%", float:"left"}}>
-                            <Form.Control type="button" value="Add Category" className="outline-dark center-block"
-                                onClick={()=>this.addCategory()}
-                                disabled={this.state.categoryToAdd == ""}/>
-                        </div>
+                        <Button variant="outline-dark center-block"
+                            onClick={() => addCategory()}
+                            disabled={state.categoryToAdd == ""}>
+                            Add Category
+                        </Button>
                     </div>
                 </div>
+            </div>
 
-                <div style={{margin: "3%"}}>
-                    <Table dataList={this.state.categoryList}
-                        columns={getCategoriesTableColumns(this.deleteCategory)} />
-                </div>
-            </Container>
-        )
-    }
+            <div style={{margin: "3%"}}>
+                <Table dataList={state.categoryList}
+                    columns={getCategoriesTableColumns(deleteCategory)} />
+            </div>
+        </Container>
+    )
 }
 
 export default Categories

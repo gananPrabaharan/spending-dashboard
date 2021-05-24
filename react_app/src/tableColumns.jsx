@@ -52,6 +52,7 @@ export const getTransactionTableColumns = (categoryList) => {
             headerAlign: "center",
             editable: false,
             sort: true,
+            formatter: (value, row) => { return row.amount < 0 ? -row.amount : ""  },
             headerStyle: (column, colIndex) => {
               return { width: '10%', textAlign: 'center' };
             }
@@ -63,6 +64,7 @@ export const getTransactionTableColumns = (categoryList) => {
             headerAlign: "center",
             editable: false,
             sort: true,
+            formatter: (value, row) => { return row.amount < 0 ? "" : row.amount  },
             headerStyle: (column, colIndex) => {
               return { width: '10%', textAlign: 'center' };
             }
