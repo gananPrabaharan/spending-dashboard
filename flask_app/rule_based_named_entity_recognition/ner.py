@@ -1,5 +1,4 @@
 import csv
-
 import pandas as pd
 
 from GeoExtraction.geoextraction import GeoExtraction
@@ -67,53 +66,70 @@ def extract(simp_list, ext1_list, ext2_list, ext3_list, ext4_list):
     final_list = []
     priority_list = [ext1_list, ext4_list, ext2_list, ext3_list, simp_list]
     for x in range(len(ext1_list)):
+        match_flag = False
         # Extracting while prioritizing highest precision patterns first
         for inner_list in priority_list:
             if len(inner_list[x]) > 2:
                 final_list.append(inner_list[x])
-            else:
-                # If no patterns matched, add empty string
-                final_list.append('')
+                match_flag = True
+                break
+
+        if not match_flag:
+            # If no patterns matched, add empty string
+            final_list.append('')
 
     return final_list
 
 
-def flow(memos_list, output_file):
+def get_vendors_list(memos_list, output_file=None):
+    unique_memos = list(set(memos_list))
     # creating output lists for each pattern
-    ori = [x for x in memos_list]
+    ori = [x for x in unique_memos]
 
-    simp_list = fix_list(memos_list, ori)
+    simp_list = fix_list(unique_memos, ori)
 
-    sim1_list = sim1(memos_list)
-    sim2_list = sim2(memos_list)
-    sim3_list = sim3(memos_list)
-    sim4_list = sim4(memos_list)
-    sim5_list = sim5(memos_list)
-    sim6_list = sim6(memos_list)
-    ext1_list = ext1(memos_list)
+    sim1_list = sim1(unique_memos)
+    sim2_list = sim2(unique_memos)
+    sim3_list = sim3(unique_memos)
+    sim4_list = sim4(unique_memos)
+    sim5_list = sim5(unique_memos)
+    sim6_list = sim6(unique_memos)
+    ext1_list = ext1(unique_memos)
     ext2_list = ext2(simp_list)
     ext3_list = ext3(simp_list)
     ext4_list = ext4(simp_list)
-    final_output = extract(simp_list, ext1_list, ext2_list, ext3_list, ext4_list)
+    extracted_output = extract(simp_list, ext1_list, ext2_list, ext3_list, ext4_list)
 
+    print("cleaning")
+    assert len(extracted_output) == len(unique_memos)
     # tracking changes created by the pattern functions
     geo = GeoExtraction()
     cleaned_output = []
-    for entry in final_output:
+    for entry in extracted_output:
         cleaned_entry = geo.remove_location(entry)
+        if "*" in cleaned_entry and cleaned_entry[0] != "*":
+            cleaned_entry = cleaned_entry.split("*")[0]
+
         cleaned_output.append(cleaned_entry)
 
-    with open(output_file, "w") as output:
-        writer = csv.writer(output, lineterminator='\n')
-        title_row = ["memo", "sim1", "sim2", "sim3", "sim4", "sim5", "sim6", "ext1", "ext2", "ext3", "ext4", "output"]
-        writer.writerow(title_row)
-        for x in range(len(ori)):   # Write the change each pattern has on the memos
-            writer.writerow([ori[x],sim1_list[x],sim2_list[x],sim3_list[x],sim4_list[x],sim5_list[x],sim6_list[x],simp_list[x],ext1_list[x],ext2_list[x],ext3_list[x],ext4_list[x],cleaned_output[x]])
+    vendor_mapping = {}
+    for i in range(len(cleaned_output)):
+        original_vendor = unique_memos[i]
+        extracted_vendor = cleaned_output[i]
+        vendor_mapping[original_vendor] = extracted_vendor
 
-    return final_output
+    if output_file is not None:
+        with open(output_file, "w") as output:
+            writer = csv.writer(output, lineterminator='\n')
+            title_row = ["memo", "sim1", "sim2", "sim3", "sim4", "sim5", "sim6", "simp", "ext1", "ext2", "ext3", "ext4", "output"]
+            writer.writerow(title_row)
+            for x in range(len(ori)):   # Write the change each pattern has on the memos
+                writer.writerow([ori[x],sim1_list[x],sim2_list[x],sim3_list[x],sim4_list[x],sim5_list[x],sim6_list[x],simp_list[x],ext1_list[x],ext2_list[x],ext3_list[x],ext4_list[x],cleaned_output[x]])
+
+    return vendor_mapping
 
 
 if __name__ == "__main__":
-    sample_file = "/Users/Ganan/PycharmProjects/spending-dashboard/flask_app/resources/bank_transations.csv"
+    sample_file = "/resources/bank_transations.csv"
     df = pd.read_csv(sample_file)
-    flow(list(df["Memo"].values), 'tracking_bank.csv')
+    get_vendors_list(list(df["Memo"].values), 'tracking_bank.csv')

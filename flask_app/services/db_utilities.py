@@ -28,10 +28,11 @@ def insert_multiple(table, row_list, existing_term=None):
     :param existing_term: (string) SQL term to use if value exists in db
     :return:
     """
-    if len(row_list[0]) == len(table.columns) - 1:
-        column_string = ", ".join([col for col in table.columns[1:]])
-    elif len(row_list[0]) == len(table.columns):
-        column_string = ", ".join([col for col in table.columns])
+    table_columns = list(table.column_mapping.keys())
+    if len(row_list[0]) == len(table_columns) - 1:
+        column_string = ", ".join([col for col in table_columns[1:]])
+    elif len(row_list[0]) == len(table_columns):
+        column_string = ", ".join([col for col in table_columns])
     else:
         raise ValueError
 
@@ -109,28 +110,28 @@ def execute_query(query, select_flag=False):
     return result
 
 
-def retrieve_categories(id_as_key=True):
+def retrieve_table_mapping(table, key_column, value_column):
     """
-    Retrieve dictionary mapping category id to category name
-    :param id_as_key: flag indicating whether to use the id as the key (use the name if False)
-    :return: dictionary mapping id to name, or name to id
+    Retrieve dictionary mapping one column to another
+    :param table: table object
+    :param key_column: column to use as dictionary key
+    :param value_column: column to use as dictionary value
+    :return: dictionary mapping keyColumn to valueColumn
     """
-    columns = ", ".join(Tables.CATEGORIES.columns)
-    query = "SELECT " + columns + " FROM " + Tables.CATEGORIES.name
+    columns = key_column + ", " + value_column
+    query = "SELECT " + columns + " FROM " + table.name
     query_result = execute_query(query, True)
 
-    category_dict = {}
-    for cat_id, cat_name in query_result:
-        if id_as_key:
-            category_dict[cat_id] = cat_name
-        else:
-            category_dict[cat_name] = cat_id
+    table_dict = {}
+    for key, value in query_result:
+        table_dict[key] = value
 
-    return category_dict
+    return table_dict
 
 
 def retrieve_from_table(table):
-    column_string = ", ".join(table.columns)
+    table_columns = list(table.column_mapping.keys())
+    column_string = ", ".join(table_columns)
     query = "SELECT " + column_string + " FROM " + table.name
 
     query_result = execute_query(query, True)
@@ -140,8 +141,8 @@ def retrieve_from_table(table):
         item_dict = {
             "id": result_tuple[0]
         }
-        for index in range(1, len(table.columns)):
-            column_name = table.columns[index]
+        for index in range(1, len(table_columns)):
+            column_name = table_columns[index]
             item_dict[column_name] = result_tuple[index]
 
         item_dict_list.append(item_dict)
@@ -153,21 +154,6 @@ def delete_from_table(table, condition, value):
     query = "DELETE FROM " + table.name + " WHERE "
     query += condition + get_value(value)
     execute_query(query)
-
-
-def update_table(table, items_list):
-    for item_dict in items_list:
-        query = "UPDATE " + table.name + " SET "
-
-        col_values = []
-        for i in range(len(table.columns)):
-            col_name = table.columns[i]
-            value = get_value(item_dict[col_name])
-            col_string = col_name + " = " + get_value(value)
-            col_values.append(col_string)
-
-        query += ", ".join(col_values) + " "
-        query += "WHERE " + table.id_col + " = " + get_value(item_dict["id"])
 
 
 def find_transaction(transaction):
