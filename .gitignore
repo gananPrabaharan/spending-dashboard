@@ -138,3 +138,6 @@ database/
 # unnecessary files
 .DS_STORE
 .idea/
+
+# file extensions
+*.csv
