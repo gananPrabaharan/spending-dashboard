@@ -63,7 +63,9 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
-    insert_multiple(Tables.CATEGORIES, [[0, ""]], "IGNORE")
+    insert_multiple(Tables.CATEGORIES, [[-1, ""]], "IGNORE")
+    execute_query(Tables.VENDORS.create_query)
+    execute_query(Tables.VENDOR_CATEGORIES.create_query)
 
 
 def delete_table(table_name):
@@ -156,6 +158,32 @@ def delete_from_table(table, condition, value):
     execute_query(query)
 
 
+def insert_transactions(transaction_list):
+    """
+    Insert list of transactions into transaction table
+
+    :param transaction_list: list of transaction objects
+    :return:
+    """
+    # Get mapping between category name name and category id
+    category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
+
+    transaction_input = []
+    for transaction in transaction_list:
+        row_values = [
+            transaction.trans_id,
+            transaction.date,
+            transaction.description,
+            transaction.amount,
+            category_mapping.get(transaction.category, -1),  # Default category_id is -1
+            transaction.vendor_id
+        ]
+        transaction_input.append(row_values)
+
+    # insert transactions in to table
+    insert_multiple(Tables.TRANSACTIONS, transaction_input, "REPLACE")
+
+
 def find_transaction(transaction):
     query = "SELECT transactionId from " + Tables.TRANSACTIONS.name + " " + \
             "WHERE date=" + get_value(transaction.date) + " " + \
@@ -177,4 +205,6 @@ def db_setup():
 
 
 if __name__ == "__main__":
-    delete_all_tables()
+    # delete_all_tables()
+    test = retrieve_from_table(Tables.TRANSACTIONS)
+    print(test)

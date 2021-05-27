@@ -2,12 +2,13 @@ from constants.general_constants import Columns
 
 
 class Transaction:
-    def __init__(self, trans_id=None, trans_date=None, description=None, category=None, amount=None):
+    def __init__(self, trans_id=None, trans_date=None, description=None, category=None, amount=None, vendor_id=-1):
         self.trans_id = trans_id
         self.date = trans_date
         self.description = description
         self.category = category
         self.amount = amount
+        self.vendor_id = vendor_id
 
     @classmethod
     def from_tuple(cls, named_tuple, trans_id=None):
@@ -21,17 +22,19 @@ class Transaction:
             amount = float(amount)
 
         category = ""
-        return cls(trans_id, date, description, category, amount)
+        vendor_id = -1
+        return cls(trans_id, date, description, category, amount, vendor_id)
 
     @classmethod
     def from_db(cls, trans_dict, category_mapping):
         trans_id = trans_dict["id"]
         date = trans_dict["date"]
         description = trans_dict["description"]
-        amount = trans_dict["amount"]
         category_id = trans_dict["categoryId"]
         category = category_mapping.get(category_id, "")
-        return cls(trans_id, date, description, category, amount)
+        amount = trans_dict["amount"]
+        vendor_id = trans_dict["vendorId"]
+        return cls(trans_id, date, description, category, amount, vendor_id)
 
     @classmethod
     def parse_from_db(cls, row_tuple, category_mapping):
@@ -41,8 +44,9 @@ class Transaction:
         amount = row_tuple[3]
         category_id = row_tuple[4]
         category = category_mapping.get(category_id, "")
+        vendor_id = row_tuple[5]
 
-        return cls(trans_id, date, description, category, amount)
+        return cls(trans_id, date, description, category, amount, vendor_id)
 
     def to_dict(self):
         trans_dict = {
@@ -50,7 +54,8 @@ class Transaction:
             Columns.DATE: self.date,
             Columns.DESCRIPTION: self.description,
             Columns.CATEGORY: self.category,
-            Columns.AMOUNT: self.amount
+            Columns.AMOUNT: self.amount,
+            Columns.VENDOR_ID: self.vendor_id
         }
         return trans_dict
 
@@ -60,6 +65,7 @@ class Transaction:
                           trans_date=trans_dict[Columns.DATE],
                           description=trans_dict[Columns.DESCRIPTION],
                           category=trans_dict[Columns.CATEGORY],
-                          amount=trans_dict[Columns.AMOUNT]
+                          amount=trans_dict[Columns.AMOUNT],
+                          vendor_id=trans_dict[Columns.VENDOR_ID]
                           )
         return transaction

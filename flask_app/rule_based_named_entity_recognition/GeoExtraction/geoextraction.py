@@ -1,14 +1,13 @@
 import csv
 import re
 from collections import defaultdict
+from constants.general_constants import Files
 
 
 class GeoExtraction:
     def __init__(self):
-        file_name = "./GeoExtraction/us_cities_states_counties.csv"
-        file_name = "./GeoExtraction/canada_cities.csv"
         self.cities, self.states_abbrev, self.states_full, self.counties, self.city_aliases = list(), list(), list(), list(), list()
-        with open(file_name) as file:
+        with open(Files.CANADA_CITIES) as file:
             file = csv.reader(file)
             next(file)  # skip the header
             for row in file:

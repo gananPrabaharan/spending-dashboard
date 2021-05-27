@@ -8,15 +8,16 @@ const Table = (props) => {
     const afterSaveCell = (oldValue, newValue, row, column) => {
         if (oldValue !== newValue){
             // Replace the changed row with new row
-            for (var i=0; i<props.dataList.length; i++){
-                if (props.dataList[i].id === row.id){
-                    props.dataList[i] = row;
-                    break;
-                }
-            }
+//             for (var i=0; i<props.dataList.length; i++){
+//                 if (props.dataList[i].id === row.id){
+//                     props.dataList[i] = row;
+//                     break;
+//                 }
+//             }
 
             // Reset state with tempData
-            props.changeStateData(props.dataList)
+//             props.changeStateData(props.dataList, row)
+            props.changeStateData(row)
         }
     };
 

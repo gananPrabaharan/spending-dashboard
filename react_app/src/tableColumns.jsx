@@ -13,7 +13,10 @@ export const createActionFormat = (actionFunction, buttonName) => {
     }
 }
 
-export const getTransactionTableColumns = (categoryList) => {
+export const getTransactionTableColumns = (categoryDict) => {
+    const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]}});
+    console.info(catOptions);
+    console.info(categoryDict)
     const transactionTableColumns = [
         {
             dataField: "id",
@@ -77,7 +80,11 @@ export const getTransactionTableColumns = (categoryList) => {
             editable: true,
             editor: {
                 type: Type.SELECT,
-                options: categoryList.map(item => {return({value: item, label: item})})
+//                 options: categoryList.map(item => {return({value: item, label: item})})
+                options: catOptions
+            },
+            formatter: (cell, row) => {
+                return categoryDict[cell]
             },
             sort: true,
             headerStyle: (column, colIndex) => {

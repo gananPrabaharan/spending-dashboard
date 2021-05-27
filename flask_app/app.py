@@ -4,7 +4,9 @@ from classes.transaction import Transaction
 from constants.general_constants import Deployment
 from constants.db_constants import Tables
 from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions
-from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, retrieve_table_mapping
+from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, \
+    retrieve_table_mapping, insert_transactions, execute_query
+from services.category_classification import categorize_vendors
 from rule_based_named_entity_recognition.ner import get_vendors_list
 
 import pandas as pd
@@ -34,43 +36,29 @@ def import_transactions():
 
         # Filer transactions to keep only new ones
         transactions_to_add = filter_new_transactions(transaction_list)
-        vendor_memo_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorMemo", "vendorId")
-        vendor_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId")
 
         # Get vendor memos that haven't been seen before
         new_vendor_memos = []
         for trans in transactions_to_add:
-            if trans.description not in vendor_memo_id_mapping:
-                new_vendor_memos.append(trans.description)
+            new_vendor_memos.append(trans.description)
 
         # Maps memo to extracted name
         transaction_memo_name_mapping = get_vendors_list(new_vendor_memos)
 
         # Get vendor names that haven't been seen before
-        vendors_to_add = []
-        for memo, name in transaction_memo_name_mapping.items():
-            if name not in vendor_name_id_mapping:
-                vendors_to_add.append([memo, name, ""])
+        vendors_to_add = [[name] for name in transaction_memo_name_mapping.values()]
 
         # Insert vendors and retrieve new memo to id mapping
         insert_multiple(Tables.VENDORS, vendors_to_add, "IGNORE")
-        vendor_memo_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorMemo", "vendorId")
+        vendor_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId")
 
         # Assemble values to insert into database
-        category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
-        transaction_input = []
         for transaction in transactions_to_add:
             # Assemble rows to be inserted into DB
-            row_values = [
-                transaction.trans_id,
-                transaction.date,
-                transaction.description,
-                transaction.amount,
-                category_mapping.get(transaction.category, 0)       # Default category_id is 0
-            ]
-            transaction_input.append(row_values)
+            vendor_name = transaction_memo_name_mapping[transaction.description]
+            transaction.vendor_id = vendor_name_id_mapping[vendor_name]
 
-        insert_multiple(Tables.TRANSACTIONS, transaction_input)
+        insert_transactions(transactions_to_add)
     return jsonify(transaction_dict_list)
 
 
@@ -83,8 +71,10 @@ def transactions():
         transaction_dict_list = [t.to_dict() for t in transaction_list]
         return jsonify(transaction_dict_list), 200
     else:
-        category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
         transaction_dict_list = json.loads(request.form["transactions"])
+        vendor_cat_changes = json.loads(request.form["changes"])
+
+        category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
         transaction_rows = []
         for trans_dict in transaction_dict_list:
             trans_id = trans_dict["id"]
@@ -93,12 +83,46 @@ def transactions():
             amount = trans_dict["amount"]
             category = trans_dict["category"]
             category_id = category_mapping.get(category, 0)
+            vendor_id = trans_dict["vendorId"]
 
-            curr_row = [trans_id, trans_date, description, amount, category_id]
+            curr_row = [trans_id, trans_date, description, amount, category_id, vendor_id]
             transaction_rows.append(curr_row)
 
         insert_multiple(Tables.TRANSACTIONS, transaction_rows, "REPLACE")
     return "success", 200
+
+
+@app.route('/api/categorize', methods=["POST"])
+def categorize():
+    # Convert input to transaction objects
+    transaction_dict_list = json.loads(request.form["transactionList"])
+    transaction_list = [Transaction.from_dict(t) for t in transaction_dict_list]
+
+    # Identify vendor ids that need to be categorized
+    vendor_ids_to_categorize = []
+    for trans in transaction_list:
+        if trans.category is not None and len(trans.category) == 0:
+            if "FIDO" in trans.description:
+                print(trans.description)
+            vendor_ids_to_categorize.append(trans.vendor_id)
+
+    # Categorize vendor ids
+    vendor_id_category_id_mapping = categorize_vendors(vendor_ids_to_categorize)
+    # Get mapping between category id and name
+    category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "categoryId", "name")
+
+    # Update necessary transactions
+    updated_transactions = []
+    for trans in transaction_list:
+        if trans.category is not None and len(trans.category) == 0:
+            category_id = vendor_id_category_id_mapping.get(trans.vendor_id, "")
+            trans.category = category_mapping[category_id]
+            updated_transactions.append(trans)
+
+    # Convert transactions into dictionaries
+    transaction_dict_list = [t.to_dict() for t in transaction_list]
+
+    return jsonify(transaction_dict_list), 200
 
 
 @app.route('/api/categories', methods=["GET", "POST", "DELETE"])
@@ -111,8 +135,13 @@ def get_categories():
         condition = "categoryId="
         delete_from_table(Tables.CATEGORIES, condition, category_id)
 
-    category_dict_list = retrieve_from_table(Tables.CATEGORIES)
-    return jsonify(category_dict_list)
+    category_query = "SELECT * FROM " + Tables.CATEGORIES.name
+    category_results = execute_query(category_query, True)
+    category_dict = {}
+    for cat_id, cat_name in category_results:
+        category_dict[cat_id] = cat_name
+
+    return jsonify(category_dict)
 
 
 if __name__ == "__main__":

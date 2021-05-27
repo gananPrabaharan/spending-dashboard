@@ -13,6 +13,11 @@ class Paths:
     FLASK_APP = join(PROJECT_PATH, "flask_app")
     REACT_APP = join(PROJECT_PATH, "react_app")
     DATABASE = join(FLASK_APP, "database")
+    RESOURCES = join(FLASK_APP, "resources")
+
+
+class Files:
+    CANADA_CITIES = join(Paths.RESOURCES, config.get("Files").get("CANADA_CITIES"))
 
 
 class Deployment:
@@ -34,6 +39,7 @@ class Columns:
     AMOUNT = "amount"
     ACCOUNT = "account"
     CATEGORY = "category"
+    VENDOR_ID = "vendorId"
 
 
 class Categories:
@@ -43,3 +49,8 @@ class Categories:
     EDUCATION = "education"
     UTILITIES = "utilities"
     RETAIL = "retail"
+
+
+class Classification:
+    MIN_DISTANCE = 0.7
+    NUM_NEIGHBOURS = 10

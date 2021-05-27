@@ -6,5 +6,8 @@
   },
   "DB": {
     "CONNECTION": "database/budgetingTool.db"
+  },
+  "Files": {
+    "CANADA_CITIES": "canada_cities.csv"
   }
 }

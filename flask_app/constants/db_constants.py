@@ -8,7 +8,8 @@ class Tables:
                              "date": "DATE",
                              "description": "NVARCHAR",
                              "amount": "NUMERIC",
-                             "categoryId": "INTEGER"
+                             "categoryId": "INTEGER",
+                             "vendorId": "INTEGER"
                           })
 
     CATEGORIES = Table(name="Categories",
@@ -20,7 +21,6 @@ class Tables:
     VENDORS = Table(name="Vendors",
                     column_mapping={
                         "vendorId": "INTEGER PRIMARY KEY",
-                        "vendorMemo": "NVARCHAR UNIQUE",
                         "vendorName": "NVARCHAR"
                     })
 
