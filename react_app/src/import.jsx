@@ -12,7 +12,7 @@ class Import extends Component {
 
         this.state = {
             file: null,
-            categoryList: [],
+            categoryDict: {},
             transactions: [],
             changesMade: false
         }
@@ -20,9 +20,8 @@ class Import extends Component {
 
     componentDidMount(){
         retrieveCategories().then((result) => {
-            const categoryDictList = result.data;
-            const catNameList = categoryDictList.map((cat) => { return cat.name } )
-            this.setState({categoryList: catNameList});
+            const categoryDict = result.data;
+            this.setState({categoryDict: categoryDict});
         });
     }
 
@@ -47,6 +46,7 @@ class Import extends Component {
     }
 
     saveChanges = () => {
+        this.setState({changesMade: false});
         const url = SERVER + "api/import";
         const formData = new FormData();
         formData.append("transactions", JSON.stringify(this.state.transactions));
@@ -71,14 +71,14 @@ class Import extends Component {
                         </div>
                     </div>
                     <Table dataList={this.state.transactions}
-                        columns={ getTransactionTableColumns(this.state.categoryList) }
+                        columns={ getTransactionTableColumns(this.state.categoryDict) }
                         changeStateData={ this.editTransaction } />
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin:"5%"}}>
                     <Button variant="outline-dark center-block"
                             onClick={()=>this.saveChanges()}
                             disabled={ !this.state.changesMade }>
-                        Save Changes
+                        Import
                     </Button>
                 </div>
             </Container>

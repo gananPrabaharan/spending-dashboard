@@ -32,7 +32,7 @@ def dataframe_to_transactions(transactions_df):
         transaction = Transaction(trans_id=index,
                                   trans_date=trans_date,
                                   description=description,
-                                  category="",
+                                  category_id=-1,
                                   amount=amount)
         transactions_list.append(transaction)
         index += 1

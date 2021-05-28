@@ -19,15 +19,19 @@ def get_value(value):
         return str(value)
 
 
-def insert_multiple(table, row_list, existing_term=None):
+def insert_multiple(table, row_list, existing_term=None, extra_string=None):
     """
     Insert multiple rows into a table
 
     :param table: Table object
     :param row_list: list of lists, with each inner list representing values for a single entry
-    :param existing_term: (string) SQL term to use if value exists in db
+    :param existing_term: (optional string) SQL term to use if value exists in db
+    :param extra_string: (optional string) extra portion of query to add
     :return:
     """
+    if len(row_list) == 0:
+        return
+
     table_columns = list(table.column_mapping.keys())
     if len(row_list[0]) == len(table_columns) - 1:
         column_string = ", ".join([col for col in table_columns[1:]])
@@ -52,6 +56,10 @@ def insert_multiple(table, row_list, existing_term=None):
         row_inserts.append(row_string)
 
     query += ", ".join(row_inserts)
+
+    if extra_string is not None:
+        query += extra_string
+
     execute_query(query)
 
 
@@ -165,9 +173,7 @@ def insert_transactions(transaction_list):
     :param transaction_list: list of transaction objects
     :return:
     """
-    # Get mapping between category name name and category id
-    category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
-
+    # Create insertion values
     transaction_input = []
     for transaction in transaction_list:
         row_values = [
@@ -175,7 +181,7 @@ def insert_transactions(transaction_list):
             transaction.date,
             transaction.description,
             transaction.amount,
-            category_mapping.get(transaction.category, -1),  # Default category_id is -1
+            transaction.category_id,
             transaction.vendor_id
         ]
         transaction_input.append(row_values)
@@ -185,6 +191,11 @@ def insert_transactions(transaction_list):
 
 
 def find_transaction(transaction):
+    """
+    Check whether a transaction has already been inserted (without using transaction id)
+    :param transaction: Transaction object
+    :return: list of transaction ids corresponding to matching transactions
+    """
     query = "SELECT transactionId from " + Tables.TRANSACTIONS.name + " " + \
             "WHERE date=" + get_value(transaction.date) + " " + \
             "AND description=" + get_value(transaction.description) + " " + \
@@ -198,6 +209,45 @@ def find_transaction(transaction):
     return transaction_ids
 
 
+def insert_vendor_categories_changes(changes_list):
+    """
+    Insert changes to vendor categories table
+
+    :param changes_list: nested list of changes. inner list format: [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
+    :return:
+    """
+
+    # Keep track of updates to vendor id + category id combinations
+    updates_dict = {}
+    for old_vend_id, old_cat_id, new_vend_id, new_cat_id in changes_list:
+        old_tuple = (old_vend_id, old_cat_id)
+        new_tuple = (new_vend_id, new_cat_id)
+
+        if old_vend_id != -1 and old_cat_id != -1:
+            updates_dict[old_tuple] = updates_dict.get(old_tuple, 0) - 1
+
+        if new_vend_id != -1 and new_cat_id != -1:
+            updates_dict[new_tuple] = updates_dict.get(new_tuple, 0) + 1
+
+    # Create list of rows to update table with (1 insert per change)
+    increment_items = []
+    decrement_items = []
+    for key, change in updates_dict.items():
+        vend_id, cat_id = key
+        for i in range(abs(change)):
+            if change < 0:
+                decrement_items.append([vend_id, cat_id, -1])
+            elif change > 0:
+                increment_items.append([vend_id, cat_id, 1])
+
+    # Insert into table
+    increment_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count+1"
+    insert_multiple(Tables.VENDOR_CATEGORIES, increment_items, extra_string=increment_string)
+
+    decrement_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count-1"
+    insert_multiple(Tables.VENDOR_CATEGORIES, decrement_items, extra_string=decrement_string)
+
+
 def db_setup():
     if not os.path.exists(Paths.DATABASE):
         Path(Paths.DATABASE).mkdir(parents=True, exist_ok=False)
@@ -206,5 +256,5 @@ def db_setup():
 
 if __name__ == "__main__":
     # delete_all_tables()
-    test = retrieve_from_table(Tables.TRANSACTIONS)
+    test = retrieve_from_table(Tables.VENDOR_CATEGORIES)
     print(test)

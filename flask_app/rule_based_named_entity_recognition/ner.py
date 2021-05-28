@@ -105,12 +105,19 @@ def get_vendors_list(memos_list, output_file=None):
     # tracking changes created by the pattern functions
     geo = GeoExtraction()
     cleaned_output = []
-    for entry in extracted_output:
+    for i, entry in enumerate(extracted_output):
         cleaned_entry = geo.remove_location(entry)
         if "*" in cleaned_entry and cleaned_entry[0] != "*":
             cleaned_entry = cleaned_entry.split("*")[0]
+        cleaned_entry = cleaned_entry.strip()
 
-        cleaned_output.append(cleaned_entry)
+        if len(cleaned_entry) == 0:
+            orig_memo = unique_memos[i]
+            cleaned_entry = geo.remove_location(orig_memo)
+            if len(cleaned_entry) == 0:
+                cleaned_entry = orig_memo
+
+        cleaned_output.append(cleaned_entry.strip())
 
     vendor_mapping = {}
     for i in range(len(cleaned_output)):
@@ -130,6 +137,4 @@ def get_vendors_list(memos_list, output_file=None):
 
 
 if __name__ == "__main__":
-    sample_file = "/resources/bank_transations.csv"
-    df = pd.read_csv(sample_file)
-    get_vendors_list(list(df["Memo"].values), 'tracking_bank.csv')
+    get_vendors_list(["RICHMOND HILL KEG #500 RICHMOND HILL, ON"], 'ner.csv')

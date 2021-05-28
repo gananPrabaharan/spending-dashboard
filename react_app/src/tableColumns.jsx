@@ -15,8 +15,6 @@ export const createActionFormat = (actionFunction, buttonName) => {
 
 export const getTransactionTableColumns = (categoryDict) => {
     const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]}});
-    console.info(catOptions);
-    console.info(categoryDict)
     const transactionTableColumns = [
         {
             dataField: "id",
@@ -73,7 +71,7 @@ export const getTransactionTableColumns = (categoryDict) => {
             }
         },
         {
-            dataField: "category",
+            dataField: "categoryId",
             text: "Category",
             type: "string",
             headerAlign: "center",

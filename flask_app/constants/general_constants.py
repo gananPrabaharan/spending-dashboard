@@ -38,7 +38,7 @@ class Columns:
     DEPOSIT = "deposit"
     AMOUNT = "amount"
     ACCOUNT = "account"
-    CATEGORY = "category"
+    CATEGORY_ID = "categoryId"
     VENDOR_ID = "vendorId"
 
 

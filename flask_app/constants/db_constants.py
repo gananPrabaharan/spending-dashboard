@@ -21,7 +21,7 @@ class Tables:
     VENDORS = Table(name="Vendors",
                     column_mapping={
                         "vendorId": "INTEGER PRIMARY KEY",
-                        "vendorName": "NVARCHAR"
+                        "vendorName": "NVARCHAR UNIQUE"
                     })
 
     VENDOR_CATEGORIES = Table(name="VendorCategories",

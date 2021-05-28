@@ -18,13 +18,15 @@ const Categories = (props) => {
 
     const getCategories = async () => {
         const catResult = await retrieveCategories();
-
-        let categoryList = [];
         if (catResult.status === 200){
-            categoryList = catResult.data;
+            setCategories(catResult.data);
         }
+    }
+
+    const setCategories = (categoryDict) => {
+        let categoryList = Object.keys(categoryDict).map(x => {return {"name": categoryDict[x], "id": x}});
         const validCategories = categoryList.filter(catDict => catDict["name"].length > 0);
-        setState({...state, categoryList: validCategories, changesMade: false});
+        setState({...state, categoryList: validCategories, changesMade: false, categoryToAdd: ""});
     }
 
     const addCategory = () => {
@@ -35,7 +37,9 @@ const Categories = (props) => {
 
         fetch(url, options).then((response) => {
             if (response.status === 200){
-                getCategories();
+                response.json().then((categoryDict) => {
+                    setCategories(categoryDict);
+                });
             }
         });
     }
@@ -51,8 +55,8 @@ const Categories = (props) => {
             const options = getRequestOptions("DELETE", formData);
             fetch(url, options).then((response) => {
                 if (response.status === 200){
-                    response.json().then((categoryList) => {
-                        setState({...state, categoryList: categoryList});
+                    response.json().then((categoryDict) => {
+                        setCategories(categoryDict);
                     });
                 }
             });

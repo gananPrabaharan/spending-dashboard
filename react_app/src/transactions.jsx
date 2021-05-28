@@ -31,11 +31,18 @@ const Transactions = (props) => {
         if (transResult.status === 200){
             transactionList = transResult.data;
         }
-        console.info(transactionList)
+
+        const copyList = []
+        // Create copy of transactionList
+        for (var i=0; i<transactionList.length; i++){
+            const transCopy = {...transactionList[i]}
+            copyList.push(transCopy);
+        }
+
         setState({...state,
             categoryDict: categoryDict,
             transactionList: transactionList,
-            originalTransactions: [...transactionList],
+            originalTransactions: copyList,
             changesMade: false
         });
     }
@@ -49,14 +56,13 @@ const Transactions = (props) => {
 
         // Keep track of change
         const originalRow = state.originalTransactions[rowIndex];
-        const originalTuple = [originalRow["vendorId"], originalRow["category"]];
-        const newTuple = [row["vendorId"], row["category"]];
+        const originalTuple = [originalRow["vendorId"], originalRow["categoryId"]];
+        const newTuple = [row["vendorId"], row["categoryId"]];
         const changes = {...state.vendorCategoryChanges};
-        console.info(row)
-        console.info(newTuple)
-        changes[originalTuple.join(',')] = newTuple.join(',');
-        console.info(changes);
+
+        changes[row["id"]] = [originalRow["vendorId"], originalRow["categoryId"], row["vendorId"], row["categoryId"]]
         updatedTransactions[rowIndex] = row
+
         setState({...state, transactionList: updatedTransactions, vendorCategoryChanges: changes, changesMade: true});
     }
 

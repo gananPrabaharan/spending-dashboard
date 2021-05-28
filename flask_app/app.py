@@ -5,7 +5,7 @@ from constants.general_constants import Deployment
 from constants.db_constants import Tables
 from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions
 from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, \
-    retrieve_table_mapping, insert_transactions, execute_query
+    retrieve_table_mapping, insert_transactions, execute_query, insert_vendor_categories_changes
 from services.category_classification import categorize_vendors
 from rule_based_named_entity_recognition.ner import get_vendors_list
 
@@ -65,24 +65,38 @@ def import_transactions():
 @app.route('/api/transactions', methods=["GET", "POST"])
 def transactions():
     if request.method == "GET":
-        category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "categoryId", "name")
+        # Retrieve transactions from table
         transaction_rows = retrieve_from_table(Tables.TRANSACTIONS)
-        transaction_list = [Transaction.from_db(row, category_mapping) for row in transaction_rows]
+        transaction_list = [Transaction.from_db(row) for row in transaction_rows]
         transaction_dict_list = [t.to_dict() for t in transaction_list]
         return jsonify(transaction_dict_list), 200
     else:
         transaction_dict_list = json.loads(request.form["transactions"])
         vendor_cat_changes = json.loads(request.form["changes"])
 
-        category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "name", "categoryId")
+        # Assemble input for recording changes made to vendor or category
+        changes_list = []
+        for old_vend_id, old_cat_id, new_vend_id, new_cat_id in vendor_cat_changes.values():
+            if old_vend_id != new_vend_id or old_cat_id != new_cat_id:
+                old_vend_id = int(old_vend_id)
+                old_cat_id = int(old_cat_id)
+                new_vend_id = int(new_vend_id)
+                new_cat_id = int(new_cat_id)
+
+                changes_list.append([old_vend_id, old_cat_id, new_vend_id, new_cat_id])
+
+        # Update vendor_categories table if necessary
+        if len(changes_list) > 0:
+            insert_vendor_categories_changes(changes_list)
+
+        # Insert transaction changes into table
         transaction_rows = []
         for trans_dict in transaction_dict_list:
             trans_id = trans_dict["id"]
             trans_date = trans_dict["date"]
             description = trans_dict["description"]
             amount = trans_dict["amount"]
-            category = trans_dict["category"]
-            category_id = category_mapping.get(category, 0)
+            category_id = trans_dict["categoryId"]
             vendor_id = trans_dict["vendorId"]
 
             curr_row = [trans_id, trans_date, description, amount, category_id, vendor_id]
@@ -101,23 +115,32 @@ def categorize():
     # Identify vendor ids that need to be categorized
     vendor_ids_to_categorize = []
     for trans in transaction_list:
-        if trans.category is not None and len(trans.category) == 0:
-            if "FIDO" in trans.description:
-                print(trans.description)
+        if trans.category_id is not None and trans.category_id == -1:
             vendor_ids_to_categorize.append(trans.vendor_id)
 
     # Categorize vendor ids
     vendor_id_category_id_mapping = categorize_vendors(vendor_ids_to_categorize)
-    # Get mapping between category id and name
-    category_mapping = retrieve_table_mapping(Tables.CATEGORIES, "categoryId", "name")
+
+    # Keep track of changes to insert into vendor_category table
+    vendor_category_changes = []
 
     # Update necessary transactions
     updated_transactions = []
     for trans in transaction_list:
-        if trans.category is not None and len(trans.category) == 0:
-            category_id = vendor_id_category_id_mapping.get(trans.vendor_id, "")
-            trans.category = category_mapping[category_id]
-            updated_transactions.append(trans)
+        if trans.category_id is not None and trans.category_id == -1:
+            vendor_id = trans.vendor_id
+            category_id = vendor_id_category_id_mapping.get(vendor_id, "")
+            if category_id != -1:
+                # Record change
+                vendor_category_changes.append([vendor_id, trans.category_id, vendor_id, category_id])
+
+                # Update transaction
+                trans.category_id = category_id
+                updated_transactions.append(trans)
+
+    # Update DB
+    insert_vendor_categories_changes(vendor_category_changes)
+    insert_transactions(updated_transactions)
 
     # Convert transactions into dictionaries
     transaction_dict_list = [t.to_dict() for t in transaction_list]

@@ -15,11 +15,19 @@ class GeoExtraction:
                     row = [', '.join(row)]
 
                 city, state_abbrev, state_full, county, city_alias = row[0].split("|")
-                self.cities.append(city)
-                self.states_abbrev.append(state_abbrev)
-                self.states_full.append(state_full)
-                self.counties.append(county)
-                self.city_aliases.append(city_alias)
+                if len(city) > 0:
+                    self.cities.append(city)
+                if len(state_abbrev) > 0:
+                    self.states_abbrev.append(state_abbrev)
+                if len(state_full) > 0:
+                    self.states_full.append(state_full)
+                if len(county) > 0:
+                    self.counties.append(county)
+                if len(city_alias) > 0:
+                    self.city_aliases.append(city_alias)
+
+        for loc_list in [self.cities, self.states_abbrev, self.states_full, self.counties, self.city_aliases]:
+            loc_list.sort(key=lambda x: len(x), reverse=True)
 
     def extract_location(self, s):
         location = defaultdict(set)
