@@ -13,7 +13,8 @@ export const createActionFormat = (actionFunction, buttonName) => {
     }
 }
 
-export const getTransactionTableColumns = (categoryList) => {
+export const getTransactionTableColumns = (categoryDict) => {
+    const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]}});
     const transactionTableColumns = [
         {
             dataField: "id",
@@ -52,6 +53,7 @@ export const getTransactionTableColumns = (categoryList) => {
             headerAlign: "center",
             editable: false,
             sort: true,
+            formatter: (value, row) => { return row.amount < 0 ? -row.amount : ""  },
             headerStyle: (column, colIndex) => {
               return { width: '10%', textAlign: 'center' };
             }
@@ -63,19 +65,24 @@ export const getTransactionTableColumns = (categoryList) => {
             headerAlign: "center",
             editable: false,
             sort: true,
+            formatter: (value, row) => { return row.amount < 0 ? "" : row.amount  },
             headerStyle: (column, colIndex) => {
               return { width: '10%', textAlign: 'center' };
             }
         },
         {
-            dataField: "category",
+            dataField: "categoryId",
             text: "Category",
             type: "string",
             headerAlign: "center",
             editable: true,
             editor: {
                 type: Type.SELECT,
-                options: categoryList.map(item => {return({value: item, label: item})})
+//                 options: categoryList.map(item => {return({value: item, label: item})})
+                options: catOptions
+            },
+            formatter: (cell, row) => {
+                return categoryDict[cell]
             },
             sort: true,
             headerStyle: (column, colIndex) => {

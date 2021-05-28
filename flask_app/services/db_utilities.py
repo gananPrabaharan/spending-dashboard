@@ -19,19 +19,24 @@ def get_value(value):
         return str(value)
 
 
-def insert_multiple(table, row_list, existing_term=None):
+def insert_multiple(table, row_list, existing_term=None, extra_string=None):
     """
     Insert multiple rows into a table
 
     :param table: Table object
     :param row_list: list of lists, with each inner list representing values for a single entry
-    :param existing_term: (string) SQL term to use if value exists in db
+    :param existing_term: (optional string) SQL term to use if value exists in db
+    :param extra_string: (optional string) extra portion of query to add
     :return:
     """
-    if len(row_list[0]) == len(table.columns) - 1:
-        column_string = ", ".join([col for col in table.columns[1:]])
-    elif len(row_list[0]) == len(table.columns):
-        column_string = ", ".join([col for col in table.columns])
+    if len(row_list) == 0:
+        return
+
+    table_columns = list(table.column_mapping.keys())
+    if len(row_list[0]) == len(table_columns) - 1:
+        column_string = ", ".join([col for col in table_columns[1:]])
+    elif len(row_list[0]) == len(table_columns):
+        column_string = ", ".join([col for col in table_columns])
     else:
         raise ValueError
 
@@ -51,6 +56,10 @@ def insert_multiple(table, row_list, existing_term=None):
         row_inserts.append(row_string)
 
     query += ", ".join(row_inserts)
+
+    if extra_string is not None:
+        query += extra_string
+
     execute_query(query)
 
 
@@ -62,6 +71,9 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
+    insert_multiple(Tables.CATEGORIES, [[-1, ""]], "IGNORE")
+    execute_query(Tables.VENDORS.create_query)
+    execute_query(Tables.VENDOR_CATEGORIES.create_query)
 
 
 def delete_table(table_name):
@@ -108,24 +120,28 @@ def execute_query(query, select_flag=False):
     return result
 
 
-def retrieve_categories():
-    columns = ", ".join(Tables.CATEGORIES.columns)
-    query = "SELECT " + columns + " FROM " + Tables.CATEGORIES.name
-
+def retrieve_table_mapping(table, key_column, value_column):
+    """
+    Retrieve dictionary mapping one column to another
+    :param table: table object
+    :param key_column: column to use as dictionary key
+    :param value_column: column to use as dictionary value
+    :return: dictionary mapping keyColumn to valueColumn
+    """
+    columns = key_column + ", " + value_column
+    query = "SELECT " + columns + " FROM " + table.name
     query_result = execute_query(query, True)
 
-    cat_dict_list = []
-    for cat_id, cat_name in query_result:
-        cat_dict_list.append({
-            "id": cat_id,
-            "name": cat_name
-        })
+    table_dict = {}
+    for key, value in query_result:
+        table_dict[key] = value
 
-    return cat_dict_list
+    return table_dict
 
 
 def retrieve_from_table(table):
-    column_string = ", ".join(table.columns)
+    table_columns = list(table.column_mapping.keys())
+    column_string = ", ".join(table_columns)
     query = "SELECT " + column_string + " FROM " + table.name
 
     query_result = execute_query(query, True)
@@ -135,8 +151,8 @@ def retrieve_from_table(table):
         item_dict = {
             "id": result_tuple[0]
         }
-        for index in range(1, len(table.columns)):
-            column_name = table.columns[index]
+        for index in range(1, len(table_columns)):
+            column_name = table_columns[index]
             item_dict[column_name] = result_tuple[index]
 
         item_dict_list.append(item_dict)
@@ -150,22 +166,86 @@ def delete_from_table(table, condition, value):
     execute_query(query)
 
 
-def update_table(table, items_list):
-    for item_dict in items_list:
-        query = "UPDATE " + table.name + " SET "
+def insert_transactions(transaction_list):
+    """
+    Insert list of transactions into transaction table
 
-        col_values = []
-        for i in range(len(table.columns)):
-            col_name = table.columns[i]
-            value = get_value(item_dict[col_name])
-            col_string = col_name + " = " + get_value(value)
-            col_values.append(col_string)
+    :param transaction_list: list of transaction objects
+    :return:
+    """
+    # Create insertion values
+    transaction_input = []
+    for transaction in transaction_list:
+        row_values = [
+            transaction.trans_id,
+            transaction.date,
+            transaction.description,
+            transaction.amount,
+            transaction.category_id,
+            transaction.vendor_id
+        ]
+        transaction_input.append(row_values)
 
-        query += ", ".join(col_values) + " "
-        query += "WHERE " + table.id_col + " = " + get_value(item_dict["id"])
+    # insert transactions in to table
+    insert_multiple(Tables.TRANSACTIONS, transaction_input, "REPLACE")
 
 
-    return
+def find_transaction(transaction):
+    """
+    Check whether a transaction has already been inserted (without using transaction id)
+    :param transaction: Transaction object
+    :return: list of transaction ids corresponding to matching transactions
+    """
+    query = "SELECT transactionId from " + Tables.TRANSACTIONS.name + " " + \
+            "WHERE date=" + get_value(transaction.date) + " " + \
+            "AND description=" + get_value(transaction.description) + " " + \
+            "AND amount=" + get_value(transaction.amount)
+
+    results = execute_query(query, True)
+    transaction_ids = []
+    for row in results:
+        transaction_ids.append(row[0])
+
+    return transaction_ids
+
+
+def insert_vendor_categories_changes(changes_list):
+    """
+    Insert changes to vendor categories table
+
+    :param changes_list: nested list of changes. inner list format: [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
+    :return:
+    """
+
+    # Keep track of updates to vendor id + category id combinations
+    updates_dict = {}
+    for old_vend_id, old_cat_id, new_vend_id, new_cat_id in changes_list:
+        old_tuple = (old_vend_id, old_cat_id)
+        new_tuple = (new_vend_id, new_cat_id)
+
+        if old_vend_id != -1 and old_cat_id != -1:
+            updates_dict[old_tuple] = updates_dict.get(old_tuple, 0) - 1
+
+        if new_vend_id != -1 and new_cat_id != -1:
+            updates_dict[new_tuple] = updates_dict.get(new_tuple, 0) + 1
+
+    # Create list of rows to update table with (1 insert per change)
+    increment_items = []
+    decrement_items = []
+    for key, change in updates_dict.items():
+        vend_id, cat_id = key
+        for i in range(abs(change)):
+            if change < 0:
+                decrement_items.append([vend_id, cat_id, -1])
+            elif change > 0:
+                increment_items.append([vend_id, cat_id, 1])
+
+    # Insert into table
+    increment_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count+1"
+    insert_multiple(Tables.VENDOR_CATEGORIES, increment_items, extra_string=increment_string)
+
+    decrement_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count-1"
+    insert_multiple(Tables.VENDOR_CATEGORIES, decrement_items, extra_string=decrement_string)
 
 
 def db_setup():
@@ -175,4 +255,6 @@ def db_setup():
 
 
 if __name__ == "__main__":
-    delete_all_tables()
+    # delete_all_tables()
+    test = retrieve_from_table(Tables.VENDOR_CATEGORIES)
+    print(test)

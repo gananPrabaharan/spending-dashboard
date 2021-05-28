@@ -5,6 +5,9 @@
     "NGINX_PORT": "3001"
   },
   "DB": {
-    "CONNECTION": "database/ideaHive.db"
+    "CONNECTION": "database/budgetingTool.db"
+  },
+  "Files": {
+    "CANADA_CITIES": "canada_cities.csv"
   }
 }
