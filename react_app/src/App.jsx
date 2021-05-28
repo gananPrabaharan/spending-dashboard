@@ -4,7 +4,7 @@ import Import from './import'
 import Categories from './categories'
 import Transaction from './transactions'
 import React from 'react'
-// import Insights from './insights'
+import Insights from './insights'
 
 const App = () => {
     return (
@@ -16,6 +16,7 @@ const App = () => {
                     <Route exact path='/import' component={(props) => <Import />}/>
                     <Route exact path='/categories' component={(props) => <Categories />}/>
                     <Route exact path='/transactions' component={(props) => <Transaction />}/>
+                    <Route exact path='/insights' component={(props) => <Insights />}/>
                 </Switch>
             </BrowserRouter>
         </div>

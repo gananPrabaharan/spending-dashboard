@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Row, Col, Button } from 'react-bootstrap'
 import { getTransactionTableColumns } from './tableColumns'
 import { SERVER, getRequestOptions } from './util'
