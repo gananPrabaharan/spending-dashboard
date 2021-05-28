@@ -15,6 +15,8 @@ export const createActionFormat = (actionFunction, buttonName) => {
 
 export const getTransactionTableColumns = (categoryDict) => {
     const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]}});
+    catOptions.sort((a, b) => {return a['value'] < b["value"] ? -1 : 1});
+
     const transactionTableColumns = [
         {
             dataField: "id",

@@ -12,7 +12,8 @@ const Transactions = (props) => {
         transactionList: [],
         originalTransactions: [],
         vendorCategoryChanges: {},
-        changesMade: false
+        disableSave: true,
+        disableCategorize: false
     });
 
     useEffect(() => {
@@ -43,7 +44,8 @@ const Transactions = (props) => {
             categoryDict: categoryDict,
             transactionList: transactionList,
             originalTransactions: copyList,
-            changesMade: false
+            disableSave: true,
+            disableCategorize: false
         });
     }
 
@@ -63,7 +65,12 @@ const Transactions = (props) => {
         changes[row["id"]] = [originalRow["vendorId"], originalRow["categoryId"], row["vendorId"], row["categoryId"]]
         updatedTransactions[rowIndex] = row
 
-        setState({...state, transactionList: updatedTransactions, vendorCategoryChanges: changes, changesMade: true});
+        setState({...state,
+            transactionList: updatedTransactions,
+            vendorCategoryChanges: changes,
+            disableSave: false,
+            disableCategorize:true
+        });
     }
 
     const categorize = () => {
@@ -76,7 +83,7 @@ const Transactions = (props) => {
         fetch(url, options).then((response) => {
             if (response.status === 200){
                 response.json().then((transactionList) => {
-                    setState({...state, transactionList: transactionList, changesMade: true});
+                    setState({...state, transactionList: transactionList, disableSave: true, disableCategorize: true});
                 });
             }
         })
@@ -91,7 +98,7 @@ const Transactions = (props) => {
         const options = getRequestOptions("POST", formData)
         fetch(url, options).then((response) => {
             if (response.status === 200){
-                setState({...state, changesMade: false});
+                setState({...state, disableSave: true, disableCategorize: false});
             }
         })
     }
@@ -105,12 +112,13 @@ const Transactions = (props) => {
             </div>
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin:"5%"}}>
                 <Button variant="outline-dark center-block"
-                    onClick={()=>categorize()}>
+                    onClick={()=>categorize()}
+                    disabled={ state.disableCategorize }>
                     Categorize
                 </Button>
                 <Button variant="outline-dark center-block"
                     onClick={()=>saveChanges()}
-                    disabled={ !state.changesMade }>
+                    disabled={ state.disableSave }>
                     Save Changes
                 </Button>
             </div>

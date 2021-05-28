@@ -12,7 +12,7 @@ const App = () => {
             <BrowserRouter>
                 <Navigation/>
                 <Switch>
-                    <Redirect exact from='/' to='import'/>
+                    <Redirect exact from='/' to='transactions'/>
                     <Route exact path='/import' component={(props) => <Import />}/>
                     <Route exact path='/categories' component={(props) => <Categories />}/>
                     <Route exact path='/transactions' component={(props) => <Transaction />}/>
