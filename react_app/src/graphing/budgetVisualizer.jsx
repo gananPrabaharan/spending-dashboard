@@ -42,7 +42,7 @@ const BudgetVisualizer = (props) => {
             const budgetColors = budgets.map((x) => {return 'rgba(75, 192, 192, 0.2)'} )
             datasets = [
                 {"data": spending, "label": "Spending", backgroundColor: spendingColors},
-                {"label": "Budget", "data": budgets, backgroundColor: budgetColors}
+                {"label": "Budget", "data": budgets, backgroundColor: budgetColors, 'fill': true}
             ];
             setChartState({...chartState, labels: categoryLabels, datasets: datasets});
         }
