@@ -15,6 +15,7 @@ class Tables:
     CATEGORIES = Table(name="Categories",
                        column_mapping={
                            "categoryId": "INTEGER PRIMARY KEY",
+                           "budget": "NUMERIC",
                            "name": "NVARCHAR UNIQUE"
                        })
 

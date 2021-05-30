@@ -66,7 +66,16 @@ def import_transactions():
 def transactions():
     if request.method == "GET":
         # Retrieve transactions from table
-        transaction_rows = retrieve_from_table(Tables.TRANSACTIONS)
+        start_date = request.args.get("startDate")
+        end_date = request.args.get("endDate")
+        date_condition = ""
+        if start_date is not None:
+            date_condition += "WHERE date >= '" + start_date + "'"
+
+        if end_date is not None:
+            date_condition += " AND date <= '" + end_date + "'"
+
+        transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, date_condition)
         transaction_list = [Transaction.from_db(row) for row in transaction_rows]
         transaction_dict_list = [t.to_dict() for t in transaction_list]
         return jsonify(transaction_dict_list), 200
@@ -151,18 +160,32 @@ def categorize():
 @app.route('/api/categories', methods=["GET", "POST", "DELETE"])
 def get_categories():
     if request.method == "POST":
-        category = json.loads(request.form["categoryToAdd"])
-        insert_multiple(Tables.CATEGORIES, [[category]], "IGNORE")
+        # Adding category to DB
+        category_id = request.form.get("categoryId")
+        category_name = json.loads(request.form["categoryName"])
+        category_budget = json.loads(request.form["categoryBudget"])
+        
+        # Assemble values for inserting into DB
+        if category_id is None:
+            category_values = [category_budget, category_name]
+        else:
+            category_id = json.loads(category_id)
+            category_values = [category_id, category_budget, category_name]
+
+        insert_multiple(Tables.CATEGORIES, [category_values], "REPLACE")
     elif request.method == "DELETE":
+        # Delete category from DB
         category_id = json.loads(request.form["categoryId"])
         condition = "categoryId="
         delete_from_table(Tables.CATEGORIES, condition, category_id)
+        update_query = "update " + Tables.TRANSACTIONS.name + " set categoryId='-1' where categoryId='" + category_id + "'"
+        execute_query(update_query)
 
     category_query = "SELECT * FROM " + Tables.CATEGORIES.name
     category_results = execute_query(category_query, True)
     category_dict = {}
-    for cat_id, cat_name in category_results:
-        category_dict[cat_id] = cat_name
+    for cat_id, cat_name, cat_budget in category_results:
+        category_dict[cat_id] = {"name": cat_name, "budget": cat_budget} 
 
     return jsonify(category_dict)
 

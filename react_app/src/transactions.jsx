@@ -58,8 +58,6 @@ const Transactions = (props) => {
 
         // Keep track of change
         const originalRow = state.originalTransactions[rowIndex];
-        const originalTuple = [originalRow["vendorId"], originalRow["categoryId"]];
-        const newTuple = [row["vendorId"], row["categoryId"]];
         const changes = {...state.vendorCategoryChanges};
 
         changes[row["id"]] = [originalRow["vendorId"], originalRow["categoryId"], row["vendorId"], row["categoryId"]]

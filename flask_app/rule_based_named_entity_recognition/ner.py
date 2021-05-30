@@ -1,9 +1,8 @@
 import csv
-import pandas as pd
 
-from GeoExtraction.geoextraction import GeoExtraction
-from simplifications import sim1, sim2, sim3, sim4, sim5, sim6
-from extractions import ext1, ext2, ext3, ext4
+from rule_based_named_entity_recognition.GeoExtraction.geoextraction import GeoExtraction
+from rule_based_named_entity_recognition.simplifications import sim1, sim2, sim3, sim4, sim5, sim6
+from rule_based_named_entity_recognition.extractions import ext1, ext2, ext3, ext4
 from difflib import SequenceMatcher
 
 

@@ -139,13 +139,26 @@ def retrieve_table_mapping(table, key_column, value_column):
     return table_dict
 
 
-def retrieve_from_table(table):
+def retrieve_from_table(table, extra_query=None):
+    """
+    Retrieve rows from table as list of dictionaries
+
+    :param table: Table object
+    :param extra_query: string containing extra conditions on retrieve query
+    :return: List of dictionaries of format (key, value)->(column_name, column_value)
+             representing row values. First column name is replaced to "id" for ease of front end table
+    """
+    # Create query
     table_columns = list(table.column_mapping.keys())
     column_string = ", ".join(table_columns)
     query = "SELECT " + column_string + " FROM " + table.name
+    if extra_query is not None:
+        query += " " + extra_query
 
+    # Get query result
     query_result = execute_query(query, True)
 
+    # Assemble list of dictionaries for each row
     item_dict_list = []
     for result_tuple in query_result:
         item_dict = {
@@ -161,6 +174,14 @@ def retrieve_from_table(table):
 
 
 def delete_from_table(table, condition, value):
+    """
+    Delete query for table
+
+    :param table: Table object to delete from
+    :param condition: (string) Condition to delete on
+    :param value: (any) value to add to condition
+    :return:
+    """
     query = "DELETE FROM " + table.name + " WHERE "
     query += condition + get_value(value)
     execute_query(query)
@@ -256,5 +277,6 @@ def db_setup():
 
 if __name__ == "__main__":
     # delete_all_tables()
-    test = retrieve_from_table(Tables.VENDOR_CATEGORIES)
-    print(test)
+    date_query = "SELECT * FROM Transactions WHERE date >= '2021-05-18' and date <= '2021-05-20'"
+    results = execute_query(date_query, True)
+    print(results)

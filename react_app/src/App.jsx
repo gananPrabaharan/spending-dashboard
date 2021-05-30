@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import Navigation from './navigation';
 import Import from './import'
-import Categories from './categories'
+import Budgets from './budgets'
 import Transaction from './transactions'
 import React from 'react'
 import Insights from './insights'
@@ -14,7 +14,7 @@ const App = () => {
                 <Switch>
                     <Redirect exact from='/' to='transactions'/>
                     <Route exact path='/import' component={(props) => <Import />}/>
-                    <Route exact path='/categories' component={(props) => <Categories />}/>
+                    <Route exact path='/budgets' component={(props) => <Budgets />}/>
                     <Route exact path='/transactions' component={(props) => <Transaction />}/>
                     <Route exact path='/insights' component={(props) => <Insights />}/>
                 </Switch>

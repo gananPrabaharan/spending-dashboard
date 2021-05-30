@@ -21,7 +21,7 @@ const Navigation = () => {
                         <Link to="/transactions" className="nav-link">Transactions</Link>
                     </Nav.Item>
                     <Nav.Item>
-                        <Link to="/categories" className="nav-link">Categories</Link>
+                        <Link to="/budgets" className="nav-link">Budgets</Link>
                     </Nav.Item>
                     <Nav.Item>
                         <Link to="/insights" className="nav-link">Insights</Link>

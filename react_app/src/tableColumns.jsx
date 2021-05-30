@@ -14,9 +14,8 @@ export const createActionFormat = (actionFunction, buttonName) => {
 }
 
 export const getTransactionTableColumns = (categoryDict) => {
-    const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]}});
+    const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]["name"]}});
     catOptions.sort((a, b) => {return a['value'] < b["value"] ? -1 : 1});
-
     const transactionTableColumns = [
         {
             dataField: "id",
@@ -84,7 +83,7 @@ export const getTransactionTableColumns = (categoryDict) => {
                 options: catOptions
             },
             formatter: (cell, row) => {
-                return categoryDict[cell]
+                return categoryDict[cell]["name"];
             },
             sort: true,
             headerStyle: (column, colIndex) => {
@@ -112,7 +111,17 @@ export const getCategoriesTableColumns = (actionFunction) => {
             editable: false,
             sort: true,
             headerStyle: (column, colIndex) => {
-              return { width: '80%', textAlign: 'center' };
+              return { width: '60%', textAlign: 'center' };
+            }
+        },
+        {
+            dataField: "budget",
+            text: "Amount",
+            headerAlign: "center",
+            editable: true,
+            sort: true,
+            headerStyle: (column, colIndex) => {
+              return { width: '20%', textAlign: 'center' };
             }
         },
         {

@@ -17,3 +17,20 @@ export const getRequestOptions = (methodType, formData) => {
 
     return options
 }
+
+export const validateNumbers = (text) => {
+    return text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+}
+
+export const dateToString = (date) => {
+    const dateParts = date.toLocaleDateString().split('/');
+    if (dateParts[0].length < 2){
+        dateParts[0] = "0" + dateParts[0]
+    }
+    if (dateParts[1].length < 2){
+        dateParts[1] = "0" + dateParts[1]
+    }
+
+    const finalDateString = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
+    return finalDateString;
+}

@@ -41,8 +41,14 @@ class Import extends Component {
         })
     }
 
-    editTransaction = (transactionData) => {
-        this.setState({transactions: transactionData, changesMade: true});
+    editTransaction = (row) => {
+        // Make copy of transactionList
+        const updatedTransactions = [...this.state.transactions];
+
+        // Find index to update
+        const rowIndex = updatedTransactions.findIndex( e => e.id === row.id);
+        updatedTransactions[rowIndex] = row
+        this.setState({transactions: updatedTransactions, changesMade: true});
     }
 
     saveChanges = () => {
