@@ -38,7 +38,12 @@ const BudgetVisualizer = (props) => {
 
             // Assemble dictionary to create chart from
             const spending = categoryLabels.map((name)=>{return categorySpending[name].toFixed(2)});
-            datasets = [{"data": spending, "label": "Spending"}, {"label": "Budget", "data": budgets}];
+            const spendingColors = categoryLabels.map((x) => {return 'rgba(255, 99, 132, 0.2)'} )
+            const budgetColors = budgets.map((x) => {return 'rgba(75, 192, 192, 0.2)'} )
+            datasets = [
+                {"data": spending, "label": "Spending", backgroundColor: spendingColors},
+                {"label": "Budget", "data": budgets, backgroundColor: budgetColors}
+            ];
             setChartState({...chartState, labels: categoryLabels, datasets: datasets});
         }
     }
