@@ -34,7 +34,7 @@ const Budgets = (props) => {
                 "budget":categoryDict[x]["budget"]
             }
         });
-        console.info(categoryList)
+
         const validCategories = categoryList.filter(catDict => catDict["name"].length > 0);
         setState({...state, categoryList: validCategories, changesMade: false, categoryName: "", categoryBudget: 0});
     }
