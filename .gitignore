@@ -127,3 +127,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# React
+node_modules/
+
+# folders to skip
+resources/
+database/
+
+# unnecessary files
+.DS_STORE
+.idea/
+
+# file extensions
+*.csv

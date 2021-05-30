@@ -1,0 +1,8 @@
+.navBanner {
+    /* height: 70px; */
+    background:linear-gradient(135deg, #af0b1c, #560000);
+}
+
+.nav-item a {
+    color: white !important;
+}
