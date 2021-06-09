@@ -11,21 +11,6 @@ class Transaction:
         self.vendor_id = vendor_id
 
     @classmethod
-    def from_tuple(cls, named_tuple, trans_id=None):
-        date = getattr(named_tuple, Columns.DATE)
-        description = getattr(named_tuple, Columns.DESCRIPTION)
-        amount = getattr(named_tuple, Columns.DEPOSIT)
-        if amount is None:
-            amount = getattr(named_tuple, Columns.WITHDRAWAL)
-            amount = -float(amount)
-        else:
-            amount = float(amount)
-
-        category_id = -1
-        vendor_id = -1
-        return cls(trans_id, date, description, category_id, amount, vendor_id)
-
-    @classmethod
     def from_db(cls, trans_dict):
         trans_id = trans_dict["id"]
         date = trans_dict["date"]

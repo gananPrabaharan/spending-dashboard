@@ -2,6 +2,7 @@ class Table:
     def __init__(self, name, column_mapping, primary_key_column=None):
         self.name = name
         self.column_mapping = column_mapping
+        self.columns = list(column_mapping.keys())
         self.create_query = self.get_create_query(primary_key_column)
 
     def get_create_query(self, primary_key_column=None):

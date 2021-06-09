@@ -1,5 +1,5 @@
 import sqlite3
-from constants.db_constants import Tables
+from constants.db_constants import Tables, DEFAULT_ID
 from constants.general_constants import Database, Paths
 import os
 from pathlib import Path
@@ -71,7 +71,7 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
-    insert_multiple(Tables.CATEGORIES, [[-1, ""]], "IGNORE")
+    insert_multiple(Tables.CATEGORIES, [[DEFAULT_ID, -1, ""]], "IGNORE")
     execute_query(Tables.VENDORS.create_query)
     execute_query(Tables.VENDOR_CATEGORIES.create_query)
 
@@ -244,10 +244,10 @@ def insert_vendor_categories_changes(changes_list):
         old_tuple = (old_vend_id, old_cat_id)
         new_tuple = (new_vend_id, new_cat_id)
 
-        if old_vend_id != -1 and old_cat_id != -1:
+        if old_cat_id != DEFAULT_ID:
             updates_dict[old_tuple] = updates_dict.get(old_tuple, 0) - 1
 
-        if new_vend_id != -1 and new_cat_id != -1:
+        if new_cat_id != DEFAULT_ID:
             updates_dict[new_tuple] = updates_dict.get(new_tuple, 0) + 1
 
     # Create list of rows to update table with (1 insert per change)

@@ -105,16 +105,17 @@ def get_vendors_list(memos_list, output_file=None):
     geo = GeoExtraction()
     cleaned_output = []
     for i, entry in enumerate(extracted_output):
-        cleaned_entry = geo.remove_location(entry)
-        if "*" in cleaned_entry and cleaned_entry[0] != "*":
-            cleaned_entry = cleaned_entry.split("*")[0]
-        cleaned_entry = cleaned_entry.strip()
+        orig_memo = unique_memos[i]
+        if "*" in orig_memo and orig_memo[0] != "*":
+            cleaned_entry = orig_memo.split("*")[0]
+        else:
+            cleaned_entry = geo.remove_location(entry)
+            cleaned_entry = cleaned_entry.strip()
 
-        if len(cleaned_entry) == 0:
-            orig_memo = unique_memos[i]
-            cleaned_entry = geo.remove_location(orig_memo)
             if len(cleaned_entry) == 0:
-                cleaned_entry = orig_memo
+                cleaned_entry = geo.remove_location(orig_memo)
+                if len(cleaned_entry) == 0:
+                    cleaned_entry = orig_memo
 
         cleaned_output.append(cleaned_entry.strip())
 

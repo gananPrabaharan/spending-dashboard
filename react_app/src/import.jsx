@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Container, Row, Col, Button } from 'react-bootstrap'
 import { getTransactionTableColumns } from './tableColumns'
-import { SERVER, getRequestOptions } from './util'
+import { SERVER, getRequestOptions, showLoader } from './util'
 import { retrieveCategories } from './data'
 import Table from './table'
 
@@ -51,7 +51,8 @@ class Import extends Component {
         this.setState({transactions: updatedTransactions, changesMade: true});
     }
 
-    saveChanges = () => {
+    importFile = () => {
+        showLoader(true);
         this.setState({changesMade: false});
         const url = SERVER + "api/import";
         const formData = new FormData();
@@ -62,7 +63,10 @@ class Import extends Component {
             if (response.status === 200){
                 response.json().then((transactionData) => {
                     this.setState({transactions: transactionData, changesMade: false});
+                    showLoader(false);
                 })
+            } else{
+                showLoader(false);
             }
         })
     }
@@ -82,7 +86,7 @@ class Import extends Component {
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin:"5%"}}>
                     <Button variant="outline-dark center-block"
-                            onClick={()=>this.saveChanges()}
+                            onClick={()=>this.importFile()}
                             disabled={ !this.state.changesMade }>
                         Import
                     </Button>

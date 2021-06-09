@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from classes.transaction import Transaction
 from constants.general_constants import Deployment
-from constants.db_constants import Tables
+from constants.db_constants import Tables, DEFAULT_ID
 from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions
 from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, \
     retrieve_table_mapping, insert_transactions, execute_query, insert_vendor_categories_changes
@@ -124,7 +124,7 @@ def categorize():
     # Identify vendor ids that need to be categorized
     vendor_ids_to_categorize = []
     for trans in transaction_list:
-        if trans.category_id is not None and trans.category_id == -1:
+        if trans.category_id is not None and trans.category_id == DEFAULT_ID:
             vendor_ids_to_categorize.append(trans.vendor_id)
 
     # Categorize vendor ids
@@ -136,10 +136,10 @@ def categorize():
     # Update necessary transactions
     updated_transactions = []
     for trans in transaction_list:
-        if trans.category_id is not None and trans.category_id == -1:
+        if trans.category_id is not None and trans.category_id == DEFAULT_ID:
             vendor_id = trans.vendor_id
             category_id = vendor_id_category_id_mapping.get(vendor_id, "")
-            if category_id != -1:
+            if category_id != DEFAULT_ID:
                 # Record change
                 vendor_category_changes.append([vendor_id, trans.category_id, vendor_id, category_id])
 
@@ -178,13 +178,14 @@ def get_categories():
         category_id = json.loads(request.form["categoryId"])
         condition = "categoryId="
         delete_from_table(Tables.CATEGORIES, condition, category_id)
-        update_query = "update " + Tables.TRANSACTIONS.name + " set categoryId='-1' where categoryId='" + category_id + "'"
+        update_query = "update " + Tables.TRANSACTIONS.name + " set categoryId='" + str(DEFAULT_ID) + \
+                       "' where categoryId='" + category_id + "'"
         execute_query(update_query)
 
-    category_query = "SELECT * FROM " + Tables.CATEGORIES.name
+    category_query = "SELECT " + ", ".join(Tables.CATEGORIES.columns) + " FROM " + Tables.CATEGORIES.name
     category_results = execute_query(category_query, True)
     category_dict = {}
-    for cat_id, cat_name, cat_budget in category_results:
+    for cat_id, cat_budget, cat_name in category_results:
         category_dict[cat_id] = {"name": cat_name, "budget": cat_budget} 
 
     return jsonify(category_dict)

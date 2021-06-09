@@ -2,6 +2,15 @@ import config from './config.json'
 
 export const SERVER = "http://" + config.Deployment.HOST + ":" + config.Deployment.FLASK_PORT + "/"
 
+export const showLoader = (showFlag) => {
+    const loader = document.querySelector('.loader');
+    if (showFlag) {
+        loader.classList.remove('loader--hide');
+    } else {
+        loader.classList.add('loader--hide');
+    }
+}
+
 export const getRequestOptions = (methodType, formData) => {
     const options = {
         mode: "cors",

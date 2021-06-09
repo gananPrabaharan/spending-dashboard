@@ -1,4 +1,5 @@
 from constants.general_constants import Columns
+from constants.db_constants import DEFAULT_ID
 from services.db_utilities import find_transaction
 from classes.transaction import Transaction
 
@@ -32,7 +33,7 @@ def dataframe_to_transactions(transactions_df):
         transaction = Transaction(trans_id=index,
                                   trans_date=trans_date,
                                   description=description,
-                                  category_id=-1,
+                                  category_id=DEFAULT_ID,
                                   amount=amount)
         transactions_list.append(transaction)
         index += 1
