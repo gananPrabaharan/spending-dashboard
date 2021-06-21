@@ -11,12 +11,24 @@ def transform_df(transactions_df):
     :param transactions_df: DataFrame of transactions
     :return: DataFrame with column names
     """
-    transactions_df.columns = [Columns.DATE, Columns.DESCRIPTION, Columns.WITHDRAWAL, Columns.DEPOSIT, Columns.ACCOUNT]
+    # If account column exists
+    if len(transactions_df.columns) == 5:
+        columns = [Columns.DATE, Columns.DESCRIPTION, Columns.WITHDRAWAL, Columns.DEPOSIT, Columns.ACCOUNT]
+    else:
+        columns = [Columns.DATE, Columns.DESCRIPTION, Columns.WITHDRAWAL, Columns.DEPOSIT]
+
+    transactions_df.columns = columns
     transactions_df.fillna("", inplace=True)
     return transactions_df
 
 
 def dataframe_to_transactions(transactions_df):
+    """
+    Convert dataframe to list of transactions
+
+    :param transactions_df: DataFrame of transactions
+    :return: list of Transaction objects
+    """
     transactions_list = []
     index = 0
     for row_tuple in transactions_df.itertuples():
