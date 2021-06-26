@@ -5,6 +5,8 @@ import Budgets from './budgets'
 import Transaction from './transactions'
 import React from 'react'
 import Insights from './insights'
+import Login from './login'
+
 
 const App = () => {
     return (
@@ -13,6 +15,7 @@ const App = () => {
                 <Navigation/>
                 <Switch>
                     <Redirect exact from='/' to='transactions'/>
+                    <Route exact path='/login' component={(props) => <Login />}/>
                     <Route exact path='/import' component={(props) => <Import />}/>
                     <Route exact path='/budgets' component={(props) => <Budgets />}/>
                     <Route exact path='/transactions' component={(props) => <Transaction />}/>
