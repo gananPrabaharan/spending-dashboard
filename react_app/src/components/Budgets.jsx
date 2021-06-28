@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 
 import { Container, Row, Col, Button, Form } from 'react-bootstrap'
-import { getCategoriesTableColumns } from './tableColumns'
+import { getCategoriesTableColumns } from './utilities/tableColumns'
 import { SERVER, getRequestOptions, validateNumbers } from './util'
-import { retrieveCategories } from './data'
+import { retrieveCategories } from './utilities/data'
 import Table from './table'
 import './css/main.css'
 

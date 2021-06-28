@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import BarChart from './chart.jsx'
+import BarChart from './Chart.jsx'
 
 const BudgetVisualizer = (props) => {
     const [chartState, setChartState] = useState({

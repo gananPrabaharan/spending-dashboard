@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Container, Row, Col, Button } from 'react-bootstrap'
-import { getTransactionTableColumns } from './tableColumns'
+import { Container, Button } from 'react-bootstrap'
+import { getTransactionTableColumns } from './utilities/tableColumns'
 import { SERVER, getRequestOptions } from './util'
 import { retrieveCategories } from './data'
 import Table from './table'

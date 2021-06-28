@@ -7,7 +7,7 @@ import React from 'react'
 import Insights from './insights'
 import Login from './login'
 import SignUp from './signup'
-import { AuthProvider } from "./contexts/AuthContext"
+import { AuthProvider } from "../contexts/AuthContext"
 
 const App = () => {
     return (
