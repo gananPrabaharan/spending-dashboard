@@ -141,3 +141,9 @@ database/
 
 # file extensions
 *.csv
+
+# environment/config files
+*.env.*
+
+# IDE
+*.vscode

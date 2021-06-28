@@ -7,12 +7,11 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-
+import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -36,7 +35,25 @@ const useStyles = makeStyles((theme) => ({
 
 const Login = () => {
     const classes = useStyles();
-
+    const history = useHistory();
+    
+    async function handleSubmit(e) {
+        e.preventDefault()
+    
+        try {
+          setError("");
+          setLoading(true);
+          await login(emailRef.current.value, passwordRef.current.value);
+          setLoading(false);
+          history.push("/");
+        } catch {
+          setError("Failed to log in");
+          setLoading(false);
+        }
+    
+        
+    }
+    
     return (
         <Container component="main" maxWidth="xs">
             <CssBaseline />
@@ -48,35 +65,12 @@ const Login = () => {
                     Sign in
                 </Typography>
                 <form className={classes.form} noValidate>
-                    <TextField
-                        variant="outlined"
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="email"
-                        label="Email Address"
-                        name="email"
-                        autoComplete="email"
-                        autoFocus/>
-                    <TextField
-                        variant="outlined"
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="password"
-                        label="Password"
-                        type="password"
-                        id="password"
-                        autoComplete="current-password"/>
+                    <TextField variant="outlined" margin="normal" fullWidth label="Email Address" autoFocus/>
+                    <TextField variant="outlined" margin="normal" fullWidth label="Password" type="password" autoComplete="current-password"/>
                     <FormControlLabel
                         control={<Checkbox value="remember" color="primary" />}
                         label="Remember me"/>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className={classes.submit}>
+                    <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit} onClick={handleSubmit}>
                     Sign In
                     </Button>
                     <Grid container>
@@ -86,7 +80,7 @@ const Login = () => {
                             </Link>
                         </Grid>
                         <Grid item>
-                            <Link href="#" variant="body2">
+                            <Link href="signup" variant="body2">
                                 {"Don't have an account? Sign Up"}
                             </Link>
                         </Grid>
