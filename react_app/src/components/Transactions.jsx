@@ -4,6 +4,7 @@ import { getTransactionTableColumns } from '../utilities/TableColumns'
 import { SERVER, getRequestOptions } from '../utilities/Util'
 import { retrieveCategories, retrieveTransactions } from '../utilities/Data'
 import Table from './Table'
+import { useAuth } from "../contexts/AuthContext"
 import '../css/main.css'
 
 const Transactions = (props) => {
@@ -16,11 +17,20 @@ const Transactions = (props) => {
         disableCategorize: false
     });
 
+    const { currentUser } = useAuth();
+
     useEffect(() => {
         getData()
     }, []);
 
     const getData = async () => {
+        
+        currentUser.getIdToken().then((idToken) => {
+            const options = getRequestOptions("GET", null, idToken);
+            const url = SERVER + "api/test";
+            fetch(url, options);
+        });
+        
         const catResult = await retrieveCategories();
         const transResult = await retrieveTransactions();
 

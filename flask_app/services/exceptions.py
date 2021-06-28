@@ -1,0 +1,2 @@
+class InvalidUserUID(Exception):
+    pass

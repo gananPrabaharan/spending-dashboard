@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_httpauth import HTTPTokenAuth
 from classes.transaction import Transaction
 from constants.general_constants import Deployment
 from constants.db_constants import Tables
+from services.authentication_utilities import get_user_uid, firebase_setup
 from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions
 from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, \
-    retrieve_table_mapping, insert_transactions, execute_query, insert_vendor_categories_changes
+    retrieve_table_mapping, insert_transactions, execute_query, insert_vendor_categories_changes, get_user_id, get_value
 from services.category_classification import categorize_vendors
 from rule_based_named_entity_recognition.ner import get_vendors_list
 
@@ -13,7 +15,19 @@ import pandas as pd
 import json
 
 app = Flask(__name__)
+auth = HTTPTokenAuth(scheme='Token')
 CORS(app)
+
+
+@app.route("/api/test", methods=["GET"])
+def test():
+    id_token = auth.get_auth().get("token")
+    uid = get_user_uid(id_token)
+    # user_id = get_user_id(uid)
+
+    print(id_token)
+    print(uid)
+    return "test"
 
 
 @app.route('/api/parseFile', methods=["POST"])
@@ -28,6 +42,9 @@ def parse_file():
 
 @app.route('/api/import', methods=["POST"])
 def import_transactions():
+    id_token = auth.get_auth().get("token")
+    uid = get_user_uid(id_token)
+    user_id = get_user_id(uid)
     transaction_dict_list = request.form["transactions"]
     if transaction_dict_list is not None:
         # convert input to list of Transaction objects
@@ -35,7 +52,7 @@ def import_transactions():
         transaction_list = [Transaction.from_dict(t) for t in transaction_dict_list]
 
         # Filer transactions to keep only new ones
-        transactions_to_add = filter_new_transactions(transaction_list)
+        transactions_to_add = filter_new_transactions(transaction_list, user_id)
 
         # Get vendor memos that haven't been seen before
         new_vendor_memos = []
@@ -46,11 +63,11 @@ def import_transactions():
         transaction_memo_name_mapping = get_vendors_list(new_vendor_memos)
 
         # Get vendor names that haven't been seen before
-        vendors_to_add = [[name] for name in transaction_memo_name_mapping.values()]
+        vendors_to_add = [[user_id, name] for name in transaction_memo_name_mapping.values()]
 
         # Insert vendors and retrieve new memo to id mapping
         insert_multiple(Tables.VENDORS, vendors_to_add, "IGNORE")
-        vendor_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId")
+        vendor_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId", user_id)
 
         # Assemble values to insert into database
         for transaction in transactions_to_add:
@@ -58,7 +75,7 @@ def import_transactions():
             vendor_name = transaction_memo_name_mapping[transaction.description]
             transaction.vendor_id = vendor_name_id_mapping[vendor_name]
 
-        insert_transactions(transactions_to_add)
+        insert_transactions(transactions_to_add, user_id)
     return jsonify(transaction_dict_list)
 
 
@@ -68,14 +85,15 @@ def transactions():
         # Retrieve transactions from table
         start_date = request.args.get("startDate")
         end_date = request.args.get("endDate")
-        date_condition = ""
+        user_id = ""
+        extra_condition = "WHERE userId=" + get_value(user_id)
         if start_date is not None:
-            date_condition += "WHERE date >= '" + start_date + "'"
+            extra_condition += "WHERE date >= '" + start_date + "'"
 
         if end_date is not None:
-            date_condition += " AND date <= '" + end_date + "'"
+            extra_condition += " AND date <= '" + end_date + "'"
 
-        transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, date_condition)
+        transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, extra_condition)
         transaction_list = [Transaction.from_db(row) for row in transaction_rows]
         transaction_dict_list = [t.to_dict() for t in transaction_list]
         return jsonify(transaction_dict_list), 200
@@ -191,5 +209,6 @@ def get_categories():
 
 
 if __name__ == "__main__":
-    db_setup()
+    firebase_setup()
+    # db_setup()
     app.run(Deployment.HOST, Deployment.FLASK_PORT, debug=False)

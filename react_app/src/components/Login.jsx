@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -11,7 +11,9 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import { Alert } from "react-bootstrap"
 import { useHistory } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -35,6 +37,14 @@ const useStyles = makeStyles((theme) => ({
 
 const Login = () => {
     const classes = useStyles();
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
+    const [state, setState] = useState({
+        email: "",
+        password: ""
+    });
+
     const history = useHistory();
     
     async function handleSubmit(e) {
@@ -43,15 +53,13 @@ const Login = () => {
         try {
           setError("");
           setLoading(true);
-          await login(emailRef.current.value, passwordRef.current.value);
+          await login(state.email, state.password);
           setLoading(false);
           history.push("/");
-        } catch {
-          setError("Failed to log in");
-          setLoading(false);
+        } catch (err){
+            setError("Failed to log in");
+            setLoading(false);
         }
-    
-        
     }
     
     return (
@@ -64,13 +72,19 @@ const Login = () => {
                 <Typography component="h1" variant="h5">
                     Sign in
                 </Typography>
+                {error && <Alert variant="danger">{error}</Alert>}
                 <form className={classes.form} noValidate>
-                    <TextField variant="outlined" margin="normal" fullWidth label="Email Address" autoFocus/>
-                    <TextField variant="outlined" margin="normal" fullWidth label="Password" type="password" autoComplete="current-password"/>
+                    <TextField variant="outlined" margin="normal" fullWidth label="Email Address" autoFocus
+                        onChange={(e) => { setState({ ...state, email: e.target.value }) }}
+                        value={state.email} />
+                    <TextField variant="outlined" margin="normal" fullWidth label="Password" type="password" autoComplete="current-password"
+                        onChange={(e) => { setState({ ...state, password: e.target.value }) }}
+                        value={state.password} />
                     <FormControlLabel
                         control={<Checkbox value="remember" color="primary" />}
                         label="Remember me"/>
-                    <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit} onClick={handleSubmit}>
+                    <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit} onClick={handleSubmit}
+                        disabled={loading || state.email.length===0 || state.password.length===0}>
                     Sign In
                     </Button>
                     <Grid container>

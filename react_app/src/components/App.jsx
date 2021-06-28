@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import Navigation from './Navigation';
+import PrivateRoute from './PrivateRoute'
 import Import from './Import'
 import Budgets from './Budgets'
 import Transaction from './Transactions'
@@ -16,13 +17,13 @@ const App = () => {
                 <Navigation/>
                 <AuthProvider>
                     <Switch>
-                        <Redirect exact from='/' to='login'/>
+                        <Redirect exact from='/' to='transactions'/>
                         <Route exact path='/login' component={(props) => <Login />}/>
                         <Route exact path='/signup' component={(props) => <SignUp />}/>
-                        <Route exact path='/import' component={(props) => <Import />}/>
-                        <Route exact path='/budgets' component={(props) => <Budgets />}/>
-                        <Route exact path='/transactions' component={(props) => <Transaction />}/>
-                        <Route exact path='/insights' component={(props) => <Insights />}/>
+                        <PrivateRoute exact path='/import' component={(props) => <Import />}/>
+                        <PrivateRoute exact path='/budgets' component={(props) => <Budgets />}/>
+                        <PrivateRoute exact path='/transactions' component={(props) => <Transaction />}/>
+                        <PrivateRoute exact path='/insights' component={(props) => <Insights />}/>
                     </Switch>
                 </AuthProvider>
             </BrowserRouter>

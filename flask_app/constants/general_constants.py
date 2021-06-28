@@ -18,6 +18,7 @@ class Paths:
 
 class Files:
     CANADA_CITIES = join(Paths.RESOURCES, config.get("Files").get("CANADA_CITIES"))
+    FIREBASE_ADMIN_SDK_CREDENTIALS = join(Paths.RESOURCES, config.get("Files").get("FIREBASE_ADMIN"))
 
 
 class Deployment:

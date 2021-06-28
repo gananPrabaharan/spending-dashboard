@@ -2,12 +2,17 @@ import config from '../config.json'
 
 export const SERVER = "http://" + config.Deployment.HOST + ":" + config.Deployment.FLASK_PORT + "/"
 
-export const getRequestOptions = (methodType, formData) => {
+export const getRequestOptions = (methodType, formData, authToken) => {
+    const headerDict = {"Accept": "application/json"};
+    if (authToken != null) {
+        headerDict["Authorization"] = "Token " + authToken
+    }
+    
     const options = {
         mode: "cors",
         credentials: "same-origin",
         method: methodType,
-        headers: {"Accept": "application/json"},
+        headers: headerDict,
         dataType: "json"
     }
 

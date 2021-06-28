@@ -40,17 +40,18 @@ def dataframe_to_transactions(transactions_df):
     return transactions_list
 
 
-def filter_new_transactions(transaction_list):
+def filter_new_transactions(transaction_list, user_id):
     """
     Given a list of transactions, find the ones that aren't in the database
 
     :param transaction_list: list of Transaction objects
+    :param user_id: (int) user id
     :return: list of Transaction objects not already in database
     """
     used_ids = set()
     new_transactions = []
     for transaction in transaction_list:
-        transaction_ids = find_transaction(transaction)
+        transaction_ids = find_transaction(transaction, user_id)
         new_flag = True
 
         # See if any matching transactions exist in DB

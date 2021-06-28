@@ -11,7 +11,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import { Alert } from "react-bootstrap"
 import { useHistory } from "react-router-dom"
-
 import { useAuth } from "../contexts/AuthContext"
 
 const useStyles = makeStyles((theme) => ({

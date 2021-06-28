@@ -1,6 +1,7 @@
 import sqlite3
 from constants.db_constants import Tables
 from constants.general_constants import Database, Paths
+from services.exceptions import InvalidUserUID
 import os
 from pathlib import Path
 
@@ -120,16 +121,17 @@ def execute_query(query, select_flag=False):
     return result
 
 
-def retrieve_table_mapping(table, key_column, value_column):
+def retrieve_table_mapping(table, key_column, value_column, user_id):
     """
     Retrieve dictionary mapping one column to another
     :param table: table object
     :param key_column: column to use as dictionary key
     :param value_column: column to use as dictionary value
+    :param user_id: (int) user id
     :return: dictionary mapping keyColumn to valueColumn
     """
     columns = key_column + ", " + value_column
-    query = "SELECT " + columns + " FROM " + table.name
+    query = "SELECT " + columns + " FROM " + table.name + " WHERE userId=" + get_value(int(user_id))
     query_result = execute_query(query, True)
 
     table_dict = {}
@@ -187,11 +189,31 @@ def delete_from_table(table, condition, value):
     execute_query(query)
 
 
-def insert_transactions(transaction_list):
+def get_user_id(user_uid):
+    """
+    Gets userId in database corresponding to given user_uid
+    :param user_uid: (string) user_uid created by Firebase
+    :return: (int) user_id corresponding to user_uid
+    """
+
+    user_id_query = "SELECT userId from " + Tables.USERS.name + \
+                    " WHERE userUid=" + get_value(user_uid)
+
+    user_results = execute_query(user_id_query, True)
+
+    if len(user_results) == 0:
+        raise InvalidUserUID("Invalid UID {}".format(user_uid))
+
+    else:
+        return int(user_results[0][0])
+
+
+def insert_transactions(transaction_list, user_id):
     """
     Insert list of transactions into transaction table
 
     :param transaction_list: list of transaction objects
+    :param user_id: (int) user id
     :return:
     """
     # Create insertion values
@@ -199,6 +221,7 @@ def insert_transactions(transaction_list):
     for transaction in transaction_list:
         row_values = [
             transaction.trans_id,
+            user_id,
             transaction.date,
             transaction.description,
             transaction.amount,
@@ -211,14 +234,16 @@ def insert_transactions(transaction_list):
     insert_multiple(Tables.TRANSACTIONS, transaction_input, "REPLACE")
 
 
-def find_transaction(transaction):
+def find_transaction(transaction, user_id):
     """
     Check whether a transaction has already been inserted (without using transaction id)
     :param transaction: Transaction object
+    :param user_id: (int) user id
     :return: list of transaction ids corresponding to matching transactions
     """
     query = "SELECT transactionId from " + Tables.TRANSACTIONS.name + " " + \
-            "WHERE date=" + get_value(transaction.date) + " " + \
+            "WHERE userId=" + get_value(int(user_id)) + " " + \
+            "AND date=" + get_value(transaction.date) + " " + \
             "AND description=" + get_value(transaction.description) + " " + \
             "AND amount=" + get_value(transaction.amount)
 
