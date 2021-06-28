@@ -1,12 +1,12 @@
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
-import Navigation from './navigation';
-import Import from './import'
-import Budgets from './budgets'
-import Transaction from './transactions'
+import Navigation from './Navigation';
+import Import from './Import'
+import Budgets from './Budgets'
+import Transaction from './Transactions'
 import React from 'react'
-import Insights from './insights'
-import Login from './login'
-import SignUp from './signup'
+import Insights from './Insights'
+import Login from './Login'
+import SignUp from './Signup'
 import { AuthProvider } from "../contexts/AuthContext"
 
 const App = () => {

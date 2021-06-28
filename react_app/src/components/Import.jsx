@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import { Container, Button } from 'react-bootstrap'
-import { getTransactionTableColumns } from './utilities/tableColumns'
-import { SERVER, getRequestOptions } from './util'
-import { retrieveCategories } from './data'
-import Table from './table'
+import { getTransactionTableColumns } from '../utilities/TableColumns'
+import { SERVER, getRequestOptions } from '../utilities/Util'
+import { retrieveCategories } from '../utilities/Data'
+import Table from './Table'
 
 
 class Import extends Component {

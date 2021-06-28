@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Container, Button } from 'react-bootstrap'
-import { getTransactionTableColumns } from './utilities/tableColumns'
-import { SERVER, getRequestOptions } from './util'
-import { retrieveCategories, retrieveTransactions } from './data'
-import Table from './table'
-import './css/main.css'
+import { getTransactionTableColumns } from '../utilities/TableColumns'
+import { SERVER, getRequestOptions } from '../utilities/Util'
+import { retrieveCategories, retrieveTransactions } from '../utilities/Data'
+import Table from './Table'
+import '../css/main.css'
 
 const Transactions = (props) => {
     const [state, setState] = useState({

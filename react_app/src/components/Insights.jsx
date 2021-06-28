@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { retrieveCategories, retrieveTransactions } from './data'
-import BudgetVisualizer from './graphing/budgetVisualizer.jsx'
+import { retrieveCategories, retrieveTransactions } from '../utilities/Data'
+import BudgetVisualizer from '../graphing/BudgetVisualizer.jsx'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import './css/insights.css'
+import '../css/insights.css'
 
 const Insights = (props) => {
     const [dateState, setDateState] = useState({

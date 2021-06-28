@@ -1,4 +1,4 @@
-import config from './config.json'
+import config from '../config.json'
 
 export const SERVER = "http://" + config.Deployment.HOST + ":" + config.Deployment.FLASK_PORT + "/"
 

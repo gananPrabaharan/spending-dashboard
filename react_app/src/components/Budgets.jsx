@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 
 import { Container, Row, Col, Button, Form } from 'react-bootstrap'
-import { getCategoriesTableColumns } from './utilities/tableColumns'
-import { SERVER, getRequestOptions, validateNumbers } from './util'
-import { retrieveCategories } from './utilities/data'
-import Table from './table'
-import './css/main.css'
+import { getCategoriesTableColumns } from '../utilities/TableColumns'
+import { SERVER, getRequestOptions, validateNumbers } from '../utilities/Util'
+import { retrieveCategories } from '../utilities/Data'
+import Table from './Table'
+import '../css/main.css'
 
 
 const Budgets = (props) => {

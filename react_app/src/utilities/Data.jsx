@@ -1,4 +1,4 @@
-import { SERVER, getRequestOptions, dateToString } from './util'
+import { SERVER, getRequestOptions, dateToString } from './Util'
 import axios from 'axios';
 
 export const retrieveCategories = async () => {
