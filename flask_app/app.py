@@ -81,18 +81,26 @@ def import_transactions():
 
 @app.route('/api/transactions', methods=["GET", "POST"])
 def transactions():
+    # Retrieve user_id
+    id_token = auth.get_auth().get("token")
+    uid = get_user_uid(id_token)
+    print(uid)
+    user_id = get_user_id(uid)
+
     if request.method == "GET":
         # Retrieve transactions from table
         start_date = request.args.get("startDate")
         end_date = request.args.get("endDate")
-        user_id = ""
+
+        # Filter transactions by userId and date
         extra_condition = "WHERE userId=" + get_value(user_id)
         if start_date is not None:
-            extra_condition += "WHERE date >= '" + start_date + "'"
+            extra_condition += " AND date >= '" + start_date + "'"
 
         if end_date is not None:
             extra_condition += " AND date <= '" + end_date + "'"
 
+        # Retrieve transactions from db and convert them to json objects
         transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, extra_condition)
         transaction_list = [Transaction.from_db(row) for row in transaction_rows]
         transaction_dict_list = [t.to_dict() for t in transaction_list]
@@ -114,7 +122,7 @@ def transactions():
 
         # Update vendor_categories table if necessary
         if len(changes_list) > 0:
-            insert_vendor_categories_changes(changes_list)
+            insert_vendor_categories_changes(changes_list, user_id)
 
         # Insert transaction changes into table
         transaction_rows = []
@@ -126,7 +134,7 @@ def transactions():
             category_id = trans_dict["categoryId"]
             vendor_id = trans_dict["vendorId"]
 
-            curr_row = [trans_id, trans_date, description, amount, category_id, vendor_id]
+            curr_row = [trans_id, user_id, trans_date, description, amount, category_id, vendor_id]
             transaction_rows.append(curr_row)
 
         insert_multiple(Tables.TRANSACTIONS, transaction_rows, "REPLACE")
@@ -135,6 +143,11 @@ def transactions():
 
 @app.route('/api/categorize', methods=["POST"])
 def categorize():
+    # Retrieve user_id
+    id_token = auth.get_auth().get("token")
+    uid = get_user_uid(id_token)
+    user_id = get_user_id(uid)
+
     # Convert input to transaction objects
     transaction_dict_list = json.loads(request.form["transactionList"])
     transaction_list = [Transaction.from_dict(t) for t in transaction_dict_list]
@@ -177,6 +190,11 @@ def categorize():
 
 @app.route('/api/categories', methods=["GET", "POST", "DELETE"])
 def get_categories():
+    # Retrieve user_id
+    id_token = auth.get_auth().get("token")
+    uid = get_user_uid(id_token)
+    user_id = get_user_id(uid)
+
     if request.method == "POST":
         # Adding category to DB
         category_id = request.form.get("categoryId")
@@ -196,13 +214,17 @@ def get_categories():
         category_id = json.loads(request.form["categoryId"])
         condition = "categoryId="
         delete_from_table(Tables.CATEGORIES, condition, category_id)
-        update_query = "update " + Tables.TRANSACTIONS.name + " set categoryId='-1' where categoryId='" + category_id + "'"
-        execute_query(update_query)
+
+        # Update all transactions with this category id
+        update_transactions_query = "update " + Tables.TRANSACTIONS.name
+        update_transactions_query += " set categoryId=" + get_value(-1) + " where categoryId=" + get_value(category_id)
+        execute_query(update_transactions_query)
 
     category_query = "SELECT * FROM " + Tables.CATEGORIES.name
+    # category_query += " WHERE user_id=" + get_value(user_id) + " OR WHERE user_id=" + get_value(-1)
     category_results = execute_query(category_query, True)
     category_dict = {}
-    for cat_id, cat_name, cat_budget in category_results:
+    for cat_id, user_id, cat_name, cat_budget in category_results:
         category_dict[cat_id] = {"name": cat_name, "budget": cat_budget} 
 
     return jsonify(category_dict)
@@ -210,5 +232,5 @@ def get_categories():
 
 if __name__ == "__main__":
     firebase_setup()
-    # db_setup()
+    db_setup()
     app.run(Deployment.HOST, Deployment.FLASK_PORT, debug=False)

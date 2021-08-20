@@ -1,5 +1,5 @@
 import sqlite3
-from constants.db_constants import Tables
+from constants.db_constants import Tables, DEFAULT_ID
 from constants.general_constants import Database, Paths
 from services.exceptions import InvalidUserUID
 import os
@@ -72,7 +72,11 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
-    insert_multiple(Tables.CATEGORIES, [[-1, ""]], "IGNORE")
+
+    # Insert default category (user_id: -1)
+    insert_multiple(Tables.CATEGORIES, [[-1, -1, -1, ""]], "IGNORE")
+
+    execute_query(Tables.USERS.create_query)
     execute_query(Tables.VENDORS.create_query)
     execute_query(Tables.VENDOR_CATEGORIES.create_query)
 
@@ -189,13 +193,24 @@ def delete_from_table(table, condition, value):
     execute_query(query)
 
 
+def add_user(user_uid):
+    """
+    Add a user to the DB
+
+    :param user_uid: (string) user_uid created by Firebase
+    :return:
+    """
+    # Insert user_uid in case it doesn't exist in the Users table
+    insert_multiple(Tables.USERS, [[user_uid]], "IGNORE")
+
+
 def get_user_id(user_uid):
     """
     Gets userId in database corresponding to given user_uid
     :param user_uid: (string) user_uid created by Firebase
     :return: (int) user_id corresponding to user_uid
     """
-
+    add_user(user_uid)
     user_id_query = "SELECT userId from " + Tables.USERS.name + \
                     " WHERE userUid=" + get_value(user_uid)
 
@@ -205,7 +220,8 @@ def get_user_id(user_uid):
         raise InvalidUserUID("Invalid UID {}".format(user_uid))
 
     else:
-        return int(user_results[0][0])
+        user_id = int(user_results[0][0])
+        return user_id
 
 
 def insert_transactions(transaction_list, user_id):
@@ -255,11 +271,12 @@ def find_transaction(transaction, user_id):
     return transaction_ids
 
 
-def insert_vendor_categories_changes(changes_list):
+def insert_vendor_categories_changes(changes_list, user_id):
     """
     Insert changes to vendor categories table
 
     :param changes_list: nested list of changes. inner list format: [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
+    :param user_id: (int) user id
     :return:
     """
 
@@ -282,15 +299,15 @@ def insert_vendor_categories_changes(changes_list):
         vend_id, cat_id = key
         for i in range(abs(change)):
             if change < 0:
-                decrement_items.append([vend_id, cat_id, -1])
+                decrement_items.append([vend_id, user_id, cat_id, -1])
             elif change > 0:
-                increment_items.append([vend_id, cat_id, 1])
+                increment_items.append([vend_id, user_id, cat_id, 1])
 
     # Insert into table
-    increment_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count+1"
+    increment_string = " ON CONFLICT(vendorId, userId, categoryId) DO UPDATE SET count=count+1"
     insert_multiple(Tables.VENDOR_CATEGORIES, increment_items, extra_string=increment_string)
 
-    decrement_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count-1"
+    decrement_string = " ON CONFLICT(vendorId, userId, categoryId) DO UPDATE SET count=count-1"
     insert_multiple(Tables.VENDOR_CATEGORIES, decrement_items, extra_string=decrement_string)
 
 

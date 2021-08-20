@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { retrieveCategories, retrieveTransactions } from '../utilities/Data'
 import BudgetVisualizer from '../graphing/BudgetVisualizer.jsx'
 import DatePicker from "react-datepicker";
+import { useAuth } from "../contexts/AuthContext"
 import "react-datepicker/dist/react-datepicker.css";
 import '../css/insights.css'
 
@@ -20,14 +21,17 @@ const Insights = (props) => {
         chartData: {}
     });
 
+    const { currentUser } = useAuth();
+
     useEffect(() => {
         initialize();
     }, [dateState]);
 
     const initialize = async () => {
+        const idToken = await currentUser.getIdToken();
         // Retrieve categories and transactions from backend
-        const catResult = await retrieveCategories();
-        const transResult = await retrieveTransactions(dateState.startDate, dateState.endDate);
+        const catResult = await retrieveCategories(idToken);
+        const transResult = await retrieveTransactions(idToken, dateState.startDate, dateState.endDate);
         
         // Store backend data in state
         let categoryDict = {};

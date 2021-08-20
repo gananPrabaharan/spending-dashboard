@@ -4,19 +4,20 @@ from services.db_utilities import retrieve_table_mapping
 from fuzzy_match import match
 
 
-def categorize_vendors(vendor_ids):
+def categorize_vendors(vendor_ids, user_id):
     """
     Determines closest vendor name in database and returns its category_id
 
     :param vendor_ids: list of vendor ids to categorize
+    :param user_id: (int) user id
     :return: dictionary mapping vendor name to category id
     """
     # Get mapping between vendor name and vendor id
-    vendors_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId")
+    vendors_name_id_mapping = retrieve_table_mapping(Tables.VENDORS, "vendorName", "vendorId", user_id)
     vendors_id_name_mapping = {v: k for k, v in vendors_name_id_mapping.items()}
 
     # Get mapping between vendor id and category id
-    vendor_id_category_mapping = retrieve_table_mapping(Tables.VENDOR_CATEGORIES, "vendorId", "categoryId")
+    vendor_id_category_mapping = retrieve_table_mapping(Tables.VENDOR_CATEGORIES, "vendorId", "categoryId", user_id)
 
     # Vendor names to categorize
     names_to_categorize = [vendors_id_name_mapping[v_id] for v_id in vendor_ids]

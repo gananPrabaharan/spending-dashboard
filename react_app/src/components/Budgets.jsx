@@ -4,6 +4,7 @@ import { Container, Row, Col, Button, Form } from 'react-bootstrap'
 import { getCategoriesTableColumns } from '../utilities/TableColumns'
 import { SERVER, getRequestOptions, validateNumbers } from '../utilities/Util'
 import { retrieveCategories } from '../utilities/Data'
+import { useAuth } from "../contexts/AuthContext"
 import Table from './Table'
 import '../css/main.css'
 
@@ -15,12 +16,15 @@ const Budgets = (props) => {
         categoryBudget: 0
     });
 
+    const { currentUser } = useAuth();
+
     useEffect(() => {
         getCategories()
     }, [])
 
     const getCategories = async () => {
-        const catResult = await retrieveCategories();
+        const idToken = await currentUser.getIdToken();
+        const catResult = await retrieveCategories(idToken);
         if (catResult.status === 200){
             setCategories(catResult.data);
         }

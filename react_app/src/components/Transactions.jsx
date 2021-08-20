@@ -17,6 +17,8 @@ const Transactions = (props) => {
         disableCategorize: false
     });
 
+//     const [idToken, setIdToken]
+
     const { currentUser } = useAuth();
 
     useEffect(() => {
@@ -24,15 +26,9 @@ const Transactions = (props) => {
     }, []);
 
     const getData = async () => {
-        
-        currentUser.getIdToken().then((idToken) => {
-            const options = getRequestOptions("GET", null, idToken);
-            const url = SERVER + "api/test";
-            fetch(url, options);
-        });
-        
-        const catResult = await retrieveCategories();
-        const transResult = await retrieveTransactions();
+        const idToken = await currentUser.getIdToken();
+        const catResult = await retrieveCategories(idToken);
+        const transResult = await retrieveTransactions(idToken);
 
         let categoryDict = {};
         let transactionList = [];

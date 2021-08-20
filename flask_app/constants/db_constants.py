@@ -42,3 +42,6 @@ class Tables:
                                   "count": "INTEGER"
                               },
                               primary_key_column="PRIMARY KEY (vendorId, categoryId)")
+
+
+DEFAULT_ID = -1
