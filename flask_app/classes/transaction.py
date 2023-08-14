@@ -66,3 +66,15 @@ class Transaction:
                           vendor_id=trans_dict[Columns.VENDOR_ID]
                           )
         return transaction
+
+    @staticmethod
+    def dict_to_db_insert(trans_dict):
+        return [
+            trans_dict[Columns.TRANSACTION_ID],
+            trans_dict[Columns.DATE],
+            trans_dict[Columns.DESCRIPTION],
+            trans_dict[Columns.AMOUNT],
+            trans_dict[Columns.CATEGORY_ID],
+            trans_dict[Columns.VENDOR_ID]
+        ]
+

@@ -10,13 +10,14 @@ const BudgetVisualizer = (props) => {
     useEffect( ()=>{categorySpending() }, [props]);
 
     const categorySpending = () => {
-        let categoryLabels = ["Total"];
-        let datasets = [];
         if (props.categoryDict != null && props.transactions != null){
             // Create items array
             const categorySpending = {};
             const catIds = Object.keys(props.categoryDict).sort();
-            const budgets = [];
+
+            const categoryLabels = ["Total"];
+            const budgets = [0];
+
             for (var i=0; i<catIds.length; i++){
                 const currCatDict = props.categoryDict[catIds[i]];
                 const catName = currCatDict["name"];
@@ -27,7 +28,7 @@ const BudgetVisualizer = (props) => {
                 }
                 budgets.push(currCatDict["budget"]);
             }
-
+            
             // Create dictionary mapping category name to amount spent in transactions
             categoryLabels.map((label) => {categorySpending[label] = 0})
 
@@ -51,7 +52,7 @@ const BudgetVisualizer = (props) => {
             const spending = categoryLabels.map((name)=>{return categorySpending[name].toFixed(2)});
             const spendingColors = categoryLabels.map((x) => {return 'rgba(255, 99, 132, 0.2)'} )
             const budgetColors = budgets.map((x) => {return 'rgba(75, 192, 192, 0.2)'} )
-            datasets = [
+            const datasets = [
                 {"data": spending, "label": "Spending", backgroundColor: spendingColors},
                 {"label": "Budget", "data": budgets, backgroundColor: budgetColors, 'fill': true}
             ];

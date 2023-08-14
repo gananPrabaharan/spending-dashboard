@@ -1,42 +1,61 @@
 import React, { useState, useEffect } from 'react'
 
 import { Container, Row, Col, Button, Form } from 'react-bootstrap'
-import { getCategoriesTableColumns } from './tableColumns'
+import { getVendorCategoriesTableColumns } from './tableColumns'
 import { SERVER, getRequestOptions, validateNumbers } from './util'
-import { retrieveCategories } from './data'
+import { retrieveVendorCategories, retrieveCategories } from './data'
 import Table from './table'
 import './css/main.css'
 
 
-const Budgets = (props) => {
+const Vendors = (props) => {
     const [state, setState] = useState({
-        categoryList: [],
-        categoryName: "",
-        categoryBudget: 0
+        originalVendorList: [],
+        vendorList: [],
+        categoryDict: {},
+        vendorCategoryChanges: {},
+        changesMade: false
     });
 
     useEffect(() => {
-        getCategories()
+        getVendors()
     }, [])
 
-    const getCategories = async () => {
+    const getVendors = async () => {
+        let categoryDict = {};
         const catResult = await retrieveCategories();
         if (catResult.status === 200){
-            setCategories(catResult.data);
+            categoryDict = catResult.data;
         }
+//         console.info(categoryDict)
+
+        let vendorCategories = [];
+        const catVendorResult = await retrieveVendorCategories();
+        if (catVendorResult.status === 200){
+            vendorCategories = catVendorResult.data;
+        }
+//         console.info(vendorCategories)
+        setData(categoryDict, vendorCategories);
     }
 
-    const setCategories = (categoryDict) => {
+    const setData = (categoryDict, vendorCategories) => {
         let categoryList = Object.keys(categoryDict).map(x => {
             return {
-                "id": x, 
-                "name": categoryDict[x]["name"], 
+                "id": x,
+                "name": categoryDict[x]["name"],
                 "budget":categoryDict[x]["budget"]
             }
         });
-
-        const validCategories = categoryList.filter(catDict => catDict["name"].length > 0);
-        setState({...state, categoryList: validCategories, changesMade: false, categoryName: "", categoryBudget: 0});
+        let vendorList = Object.keys(vendorCategories).map(x => {
+            return {
+                "id": x,
+                "vendor": vendorCategories[x]["vendor"],
+                "categoryId": vendorCategories[x]["categoryId"]
+            }
+        });
+//         vendorList = []
+        console.info(vendorList);
+        setState({...state, vendorList: vendorList, categoryDict: categoryDict, changesMade: false});
     }
 
     const addCategory = () => {
@@ -55,39 +74,17 @@ const Budgets = (props) => {
         });
     }
 
-    const deleteCategory = (category) => {
-        const deleteId = category.id
-        const catToDelete = state.categoryList.find(c => c.id === deleteId);
-        if (catToDelete != null){
-            const url = SERVER + "api/categories";
-            const formData = new FormData();
-            formData.append("categoryId", JSON.stringify(deleteId));
-
-            const options = getRequestOptions("DELETE", formData);
-            fetch(url, options).then((response) => {
-                if (response.status === 200){
-                    response.json().then((categoryDict) => {
-                        setCategories(categoryDict);
-                    });
-                }
-            });
-        } else{
-            console.error("Missing Row");
-        }
-    }
-
-    const editCategory = (row) => {
-        const url = SERVER + "api/categories";
+    const editVendorCategory = (row, oldValue, newValue) => {
+        const url = SERVER + "api/vendor_categories";
         const formData = new FormData();
-        formData.append("categoryId", JSON.stringify(row["id"]));
-        formData.append("categoryName", JSON.stringify(row["name"]));
-        formData.append("categoryBudget", JSON.stringify(row["budget"]));
+        formData.append("vendorId", JSON.stringify(row["vendorId"]));
+        formData.append("categoryId", JSON.stringify(newValue));
+        formData.append("oldCategoryId", JSON.stringify(oldValue));
         const options = getRequestOptions("POST", formData);
-
         fetch(url, options).then((response) => {
             if (response.status === 200){
-                response.json().then((categoryDict) => {
-                    setCategories(categoryDict);
+                response.json().then((vendorCategories) => {
+                    setData(state.categoryDict, vendorCategories);
                 });
             }
         });
@@ -108,7 +105,7 @@ const Budgets = (props) => {
                         </div>
                     </Col>
                 </Row>
-                
+
                 <Row>
                     <Col sm={3}>
                         <Form.Control type="text"
@@ -132,12 +129,12 @@ const Budgets = (props) => {
             </div>
 
             <div style={{margin: "3%"}}>
-                <Table dataList={state.categoryList}
-                    columns={getCategoriesTableColumns(deleteCategory)} 
-                    changeStateData={editCategory}/>
+                <Table dataList={state.vendorList}
+                    columns={getVendorCategoriesTableColumns(state.categoryDict)}
+                    changeStateData={editVendorCategory}/>
             </div>
         </Container>
     )
 }
 
-export default Budgets
+export default Vendors

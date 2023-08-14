@@ -1,6 +1,7 @@
 from constants.general_constants import Columns
-from services.db_utilities import find_transaction
+from services.db_utilities import find_transaction, retrieve_from_table
 from classes.transaction import Transaction
+from constants.db_constants import Tables
 
 
 def transform_df(transactions_df):
@@ -65,3 +66,11 @@ def filter_new_transactions(transaction_list):
             new_transactions.append(transaction)
 
     return new_transactions
+
+
+def get_transactions_for_frontend(date_condition=None):
+    transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, date_condition)
+    transaction_list = [Transaction.from_db(row) for row in transaction_rows]
+    transaction_dict_list = [t.to_dict() for t in transaction_list]
+    transaction_dict_list = sorted(transaction_dict_list, key=lambda x: x['date'], reverse=True)
+    return transaction_dict_list

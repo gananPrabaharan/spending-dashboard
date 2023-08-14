@@ -85,7 +85,8 @@ def get_memo_vendor_mapping(memos_list, output_file=None):
     """
     Retuns a mapping
     """
-    unique_memos = list(set(memos_list))
+    memos_list_lowered = [m.lower() for m in memos_list]
+    unique_memos = list(set(memos_list_lowered))
     # creating output lists for each pattern
     ori = [x for x in unique_memos]
 

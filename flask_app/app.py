@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from classes.transaction import Transaction
-from constants.general_constants import Deployment
+from constants.general_constants import Deployment, Columns
 from constants.db_constants import Tables
-from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions
+from services.utilities import transform_df, dataframe_to_transactions, filter_new_transactions, get_transactions_for_frontend
 from services.db_utilities import retrieve_from_table, db_setup, insert_multiple, delete_from_table, \
-    retrieve_table_mapping, insert_transactions, execute_query, insert_vendor_categories_changes, insert_new_vendor_categories_changes
+    retrieve_table_mapping, insert_transactions, execute_query, insert_new_vendor_categories_changes
 from services.category_classification import categorize_vendors
 from rule_based_named_entity_recognition.ner import get_memo_vendor_mapping
 
@@ -75,45 +75,34 @@ def transactions():
         if end_date is not None:
             date_condition += " AND date <= '" + end_date + "'"
 
-        transaction_rows = retrieve_from_table(Tables.TRANSACTIONS, date_condition)
-        transaction_list = [Transaction.from_db(row) for row in transaction_rows]
-        transaction_dict_list = [t.to_dict() for t in transaction_list]
-        transaction_dict_list = sorted(transaction_dict_list, key=lambda x: x['date'], reverse=True)
+        transaction_dict_list = get_transactions_for_frontend(date_condition)
         return jsonify(transaction_dict_list), 200
     elif request.method == "POST":
         transaction_dict_list = json.loads(request.form["transactions"])
-        vendor_cat_changes = json.loads(request.form["changes"])
 
+        # Not needed anymore
+        """
+        vendor_cat_changes = json.loads(request.form["changes"])
+        
         # Assemble input for recording changes made to vendor or category
-        changes_list = []
         vendor_category_changes = []
         for old_vend_id, old_cat_id, new_vend_id, new_cat_id in vendor_cat_changes.values():
             if old_vend_id != new_vend_id or old_cat_id != new_cat_id:
-                old_vend_id = int(old_vend_id)
-                old_cat_id = int(old_cat_id)
                 new_vend_id = int(new_vend_id)
                 new_cat_id = int(new_cat_id)
 
-                changes_list.append([old_vend_id, old_cat_id, new_vend_id, new_cat_id])
                 vendor_category_changes.append([new_vend_id, new_cat_id])
 
         # Update vendor_categories table if necessary
-        if len(changes_list) > 0:
-            insert_vendor_categories_changes(changes_list)
+        # TODO: create new button for this
+        if len(vendor_category_changes) > 0:
             insert_new_vendor_categories_changes(vendor_category_changes)
-            # insert_multiple(Tables.NEW_VENDORS, vendor_category_changes, "REPLACE")
+        """
 
         # Insert transaction changes into table
         transaction_rows = []
         for trans_dict in transaction_dict_list:
-            trans_id = trans_dict["id"]
-            trans_date = trans_dict["date"]
-            description = trans_dict["description"]
-            amount = trans_dict["amount"]
-            category_id = trans_dict["categoryId"]
-            vendor_id = trans_dict["vendorId"]
-
-            curr_row = [trans_id, trans_date, description, amount, category_id, vendor_id]
+            curr_row = Transaction.dict_to_db_insert(trans_dict)
             transaction_rows.append(curr_row)
 
         insert_multiple(Tables.TRANSACTIONS, transaction_rows, "REPLACE")
@@ -122,6 +111,24 @@ def transactions():
 
 @app.route('/api/categorize', methods=["POST"])
 def categorize():
+    transaction_dict = json.loads(request.form["transaction"])
+    vendor_id = transaction_dict[Columns.VENDOR_ID]
+    new_category_id = transaction_dict[Columns.CATEGORY_ID]
+
+    # Update category in Vendors Table
+    insert_new_vendor_categories_changes([[vendor_id, new_category_id]])
+
+    # Update transaction in Transactions Table
+    query = "UPDATE {} SET {}={} WHERE {}={}".format(Tables.TRANSACTIONS.name, Columns.CATEGORY_ID, new_category_id, Columns.VENDOR_ID, vendor_id)
+    execute_query(query)
+    # insert_multiple(Tables.TRANSACTIONS, [Transaction.dict_to_db_insert(transaction_dict)], "REPLACE")
+
+    # Return transactions
+    transaction_dict_list = get_transactions_for_frontend()
+    return jsonify(transaction_dict_list), 200
+
+
+def categorize_uncategorized_transactions():
     # Convert input to transaction objects
     transaction_dict_list = json.loads(request.form["transactionList"])
     transaction_list = [Transaction.from_dict(t) for t in transaction_dict_list]
@@ -136,11 +143,10 @@ def categorize():
     vendor_id_category_id_mapping = categorize_vendors(vendor_ids_to_categorize)
 
     # Keep track of changes to insert into vendor_category table
-    vendor_category_changes = []
+    vendor_category_inserts = []
 
     # Update necessary transactions with categories
     updated_transactions = []
-    vendor_category_inserts = []
     for trans in transaction_list:
         # Only update transactions that haven't yet been categorized
         if trans.category_id == -1:
@@ -150,14 +156,13 @@ def categorize():
             # Transaction has no category id but the vendor does have a category
             if category_id != -1:
                 # Record change
-                vendor_category_changes.append([vendor_id, trans.category_id, vendor_id, category_id])
                 vendor_category_inserts.append([vendor_id, trans.category_id])
+
                 # Update transaction
                 trans.category_id = category_id
                 updated_transactions.append(trans)
 
     # Update DB
-    insert_vendor_categories_changes(vendor_category_changes)
     insert_transactions(updated_transactions)
     # insert_multiple(Tables.NEW_VENDORS, vendor_category_inserts, "REPLACE")
     insert_new_vendor_categories_changes(vendor_category_inserts)
@@ -203,6 +208,7 @@ def get_categories():
 
 @app.route('/api/vendor_categories', methods=["GET", "POST", "DELETE"])
 def get_vendor_categories():
+    # TODO
     if request.method == "POST":
         # Adding category to DB
         old_category_id = int(json.loads(request.form.get("oldCategoryId")))
@@ -211,11 +217,6 @@ def get_vendor_categories():
 
         # Assemble values for inserting into DB
         vendor_category_changes = [[vendor_id, old_category_id, vendor_id, category_id]]
-        print(vendor_category_changes)
-        insert_vendor_categories_changes(vendor_category_changes)
-
-        # [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
-        # insert_multiple(Tables.VENDOR_CATEGORIES, [category_values], "REPLACE")
 
     vendor_category_query = "SELECT NewVendors.vendorId, NewVendors.vendorName, NewVendors.categoryId " \
                             "FROM NewVendors "

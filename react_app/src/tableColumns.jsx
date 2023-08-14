@@ -13,7 +13,8 @@ export const createActionFormat = (actionFunction, buttonName) => {
     }
 }
 
-export const getTransactionTableColumns = (categoryDict) => {
+export const getTransactionTableColumns = (categoryDict, actionFunction) => {
+    const actionFormat = createActionFormat(actionFunction, "Categorize")
     const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]["name"]}});
     catOptions.sort((a, b) => {return a['value'] < b["value"] ? -1 : 1});
     const transactionTableColumns = [
@@ -94,6 +95,17 @@ export const getTransactionTableColumns = (categoryDict) => {
             headerStyle: (column, colIndex) => {
               return { width: '10%', textAlign: 'center' };
             }
+        },
+        {
+            text: "Action",
+            dataField: "",
+            headerAlign: "center",
+            editable: false,
+            formatter: actionFormat,
+            headerStyle: (column, colIndex) => {
+              return { width: '10%', textAlign: 'center' };
+            }
+
         }
     ];
     return transactionTableColumns

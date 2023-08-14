@@ -281,14 +281,14 @@ def insert_new_vendor_categories_changes(changes_list):
     """
     Insert changes to vendor categories table
 
-    :param changes_list: nested list of changes. inner list format: [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
+    :param changes_list: nested list of changes. inner list format: [vend_id, cat_id]
     :return:
     """
 
-    vendor_query = "SELECT NewVendors.vendorId, NewVendors.vendorName, NewVendors.categoryId " \
-                            "FROM NewVendors "
+    vendor_query = "SELECT NewVendors.vendorId, NewVendors.vendorName, NewVendors.categoryId FROM NewVendors"
     vendor_results = execute_query(vendor_query, True)
     vendor_name_mapping = {}
+
     for vendor_id, vendor_name, cat_id in vendor_results:
         vendor_name_mapping[vendor_id] = vendor_name
 
@@ -296,6 +296,7 @@ def insert_new_vendor_categories_changes(changes_list):
     for vendor_id, category_id in changes_list:
         changes_insert.append([vendor_id, vendor_name_mapping[vendor_id], category_id])
 
+    # TODO: Optimize this insert
     insert_multiple(Tables.NEW_VENDORS, changes_insert, "REPLACE")
 
 
@@ -312,25 +313,25 @@ if __name__ == "__main__":
     # temp_query = 'select categoryId, name, budget from "Categories"'
 
 
-    execute_query(Tables.NEW_VENDORS.create_query)
-    vendor_category_query = "SELECT Vendors.vendorId, Vendors.vendorName, Categories.categoryId " \
-                            "FROM Vendors " \
-                            "JOIN VendorCategories " \
-                            "ON Vendors.vendorId = VendorCategories.vendorId " \
-                            "JOIN Categories " \
-                            "ON Categories.categoryId = VendorCategories.categoryId"
-
-    vendor_category_results = execute_query(vendor_category_query, True)
-    new_vendor_inserts = []
-    for vendor_id, vendor_name, cat_id in vendor_category_results:
-        new_vendor_inserts.append([vendor_id, vendor_name, cat_id])
-
-
-    # insert_multiple(Tables.NEW_VENDORS, new_vendor_inserts)
-    temp_query = "SELECT * FROM NewVendors where NewVendors.categoryId != -1;"
-    results = execute_query(temp_query, True)
-    print(results)
-
+    # execute_query(Tables.NEW_VENDORS.create_query)
+    # vendor_category_query = "SELECT Vendors.vendorId, Vendors.vendorName, Categories.categoryId " \
+    #                         "FROM Vendors " \
+    #                         "JOIN VendorCategories " \
+    #                         "ON Vendors.vendorId = VendorCategories.vendorId " \
+    #                         "JOIN Categories " \
+    #                         "ON Categories.categoryId = VendorCategories.categoryId"
+    #
+    # vendor_category_results = execute_query(vendor_category_query, True)
+    # new_vendor_inserts = []
+    # for vendor_id, vendor_name, cat_id in vendor_category_results:
+    #     new_vendor_inserts.append([vendor_id, vendor_name, cat_id])
+    #
+    #
+    # # insert_multiple(Tables.NEW_VENDORS, new_vendor_inserts)
+    # temp_query = "SELECT * FROM NewVendors where NewVendors.categoryId != -1;"
+    # results = execute_query(temp_query, True)
+    # print(results)
+    #
     temp_query = "SELECT * FROM Categories;"
     results = execute_query(temp_query, True)
     print(results)

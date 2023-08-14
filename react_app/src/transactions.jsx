@@ -12,8 +12,7 @@ const Transactions = (props) => {
         transactionList: [],
         originalTransactions: [],
         vendorCategoryChanges: {},
-        disableSave: true,
-        disableCategorize: false
+        disableSave: true
     });
 
     useEffect(() => {
@@ -44,8 +43,7 @@ const Transactions = (props) => {
             categoryDict: categoryDict,
             transactionList: transactionList,
             originalTransactions: copyList,
-            disableSave: true,
-            disableCategorize: false
+            disableSave: true
         });
     }
 
@@ -66,22 +64,38 @@ const Transactions = (props) => {
         setState({...state,
             transactionList: updatedTransactions,
             vendorCategoryChanges: changes,
-            disableSave: false,
-            disableCategorize:true
+            disableSave: false
         });
     }
 
     const categorize = () => {
+        // TODO: remove this
         const url = SERVER + "api/categorize";
 
         const formData = new FormData();
         formData.append("transactionList", JSON.stringify(state.transactionList));
-        console.info('cat')
+
         const options = getRequestOptions("POST", formData)
         fetch(url, options).then((response) => {
             if (response.status === 200){
                 response.json().then((transactionList) => {
-                    setState({...state, transactionList: transactionList, disableSave: true, disableCategorize: true});
+                    setState({...state, transactionList: transactionList, disableSave: true});
+                });
+            }
+        })
+    }
+
+    const categorizeVendor = (transaction) => {
+        const url = SERVER + "api/categorize";
+
+        const formData = new FormData();
+        formData.append("transaction", JSON.stringify(transaction));
+
+        const options = getRequestOptions("POST", formData)
+        fetch(url, options).then((response) => {
+            if (response.status === 200){
+                response.json().then((transactionList) => {
+                    setState({...state, transactionList: transactionList, disableSave: true});
                 });
             }
         })
@@ -93,12 +107,10 @@ const Transactions = (props) => {
         formData.append("transactions", JSON.stringify(state.transactionList));
         formData.append("changes", JSON.stringify(state.vendorCategoryChanges));
 
-        console.info(state.vendorCategoryChanges);
-
         const options = getRequestOptions("POST", formData)
         fetch(url, options).then((response) => {
             if (response.status === 200){
-                setState({...state, disableSave: true, disableCategorize: false});
+                setState({...state, disableSave: true});
             }
         })
     }
@@ -107,15 +119,10 @@ const Transactions = (props) => {
         <Container fluid>
             <div style={{margin: "3%"}}>
                 <Table dataList={state.transactionList}
-                    columns={ getTransactionTableColumns(state.categoryDict) }
+                    columns={ getTransactionTableColumns(state.categoryDict, categorizeVendor) }
                     changeStateData={ editTransaction } />
             </div>
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin:"5%"}}>
-                <Button variant="outline-dark center-block"
-                    onClick={()=>categorize()}
-                    disabled={ state.disableCategorize }>
-                    Categorize
-                </Button>
                 <Button variant="outline-dark center-block"
                     onClick={()=>saveChanges()}
                     disabled={ state.disableSave }>
