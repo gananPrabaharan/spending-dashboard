@@ -61,6 +61,7 @@ class Import extends Component {
         fetch(url, options).then((response) => {
             if (response.status === 200){
                 response.json().then((transactionData) => {
+                    console.info('Imported')
                     this.setState({transactions: transactionData, changesMade: false});
                 })
             }

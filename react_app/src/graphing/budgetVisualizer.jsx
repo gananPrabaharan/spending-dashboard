@@ -10,7 +10,7 @@ const BudgetVisualizer = (props) => {
     useEffect( ()=>{categorySpending() }, [props]);
 
     const categorySpending = () => {
-        let categoryLabels = [];
+        let categoryLabels = ["Total"];
         let datasets = [];
         if (props.categoryDict != null && props.transactions != null){
             // Create items array
@@ -22,17 +22,28 @@ const BudgetVisualizer = (props) => {
                 const catName = currCatDict["name"];
                 if (catName.length > 0){
                     categoryLabels.push(catName);
-                    budgets.push(currCatDict["budget"]);
+                } else {
+                    categoryLabels.push("Other");
                 }
+                budgets.push(currCatDict["budget"]);
             }
-            
+
             // Create dictionary mapping category name to amount spent in transactions
             categoryLabels.map((label) => {categorySpending[label] = 0})
+
             for (var i=0; i<props.transactions.length; i++){
                 const trans = props.transactions[i];
-                const catName = props.categoryDict[trans.categoryId]["name"];
-                if (catName in categorySpending){
+//                 console.info(trans);
+                let catName = props.categoryDict[trans.categoryId]["name"];
+                if (!(catName in categorySpending)){
+                    catName = "Other";
+                }
+
+                if (trans.categoryId == 0){
+                    categorySpending[catName] += Number(trans.amount.toFixed(2));
+                } else {
                     categorySpending[catName] -= trans.amount.toFixed(2);
+                    categorySpending["Total"] -= trans.amount.toFixed(2);
                 }
             }
 

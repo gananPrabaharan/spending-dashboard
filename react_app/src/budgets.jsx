@@ -22,6 +22,7 @@ const Budgets = (props) => {
     const getCategories = async () => {
         const catResult = await retrieveCategories();
         if (catResult.status === 200){
+            console.info(catResult);
             setCategories(catResult.data);
         }
     }
@@ -34,8 +35,9 @@ const Budgets = (props) => {
                 "budget":categoryDict[x]["budget"]
             }
         });
-
+        console.info(categoryList);
         const validCategories = categoryList.filter(catDict => catDict["name"].length > 0);
+        console.info(validCategories);
         setState({...state, categoryList: validCategories, changesMade: false, categoryName: "", categoryBudget: 0});
     }
 
@@ -79,7 +81,6 @@ const Budgets = (props) => {
     const editCategory = (row) => {
         const url = SERVER + "api/categories";
         const formData = new FormData();
-
         formData.append("categoryId", JSON.stringify(row["id"]));
         formData.append("categoryName", JSON.stringify(row["name"]));
         formData.append("categoryBudget", JSON.stringify(row["budget"]));

@@ -32,6 +32,7 @@ const Insights = (props) => {
         // Store backend data in state
         let categoryDict = {};
         if (catResult.status === 200){
+            console.info(catResult);
             categoryDict = catResult.data;
         }
         

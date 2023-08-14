@@ -10,7 +10,7 @@ class Tables:
                              "amount": "NUMERIC",
                              "categoryId": "INTEGER",
                              "vendorId": "INTEGER"
-                          })
+                         })
 
     CATEGORIES = Table(name="Categories",
                        column_mapping={
@@ -24,6 +24,13 @@ class Tables:
                         "vendorId": "INTEGER PRIMARY KEY",
                         "vendorName": "NVARCHAR UNIQUE"
                     })
+
+    NEW_VENDORS = Table(name="NewVendors",
+                        column_mapping={
+                            "vendorId": "INTEGER PRIMARY KEY",
+                            "vendorName": "NVARCHAR UNIQUE",
+                            "categoryId": "INTEGER DEFAULT -1 NOT NULL"
+                        })
 
     VENDOR_CATEGORIES = Table(name="VendorCategories",
                               column_mapping={

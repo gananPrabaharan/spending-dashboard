@@ -76,7 +76,7 @@ const Transactions = (props) => {
 
         const formData = new FormData();
         formData.append("transactionList", JSON.stringify(state.transactionList));
-
+        console.info('cat')
         const options = getRequestOptions("POST", formData)
         fetch(url, options).then((response) => {
             if (response.status === 200){
@@ -92,6 +92,8 @@ const Transactions = (props) => {
         const formData = new FormData();
         formData.append("transactions", JSON.stringify(state.transactionList));
         formData.append("changes", JSON.stringify(state.vendorCategoryChanges));
+
+        console.info(state.vendorCategoryChanges);
 
         const options = getRequestOptions("POST", formData)
         fetch(url, options).then((response) => {

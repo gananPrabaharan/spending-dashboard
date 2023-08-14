@@ -26,6 +26,9 @@ const Navigation = () => {
                     <Nav.Item>
                         <Link to="/insights" className="nav-link">Insights</Link>
                     </Nav.Item>
+                    <Nav.Item>
+                        <Link to="/vendors" className="nav-link">Vendors</Link>
+                    </Nav.Item>
                 </Nav>
             </Navbar.Collapse>
         </Navbar>

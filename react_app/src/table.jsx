@@ -17,7 +17,7 @@ const Table = (props) => {
 
             // Reset state with tempData
 //             props.changeStateData(props.dataList, row)
-            props.changeStateData(row)
+            props.changeStateData(row, oldValue, newValue)
         }
     };
 

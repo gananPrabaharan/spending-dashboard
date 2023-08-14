@@ -83,7 +83,12 @@ export const getTransactionTableColumns = (categoryDict) => {
                 options: catOptions
             },
             formatter: (cell, row) => {
-                return categoryDict[cell]["name"];
+                if (cell in categoryDict) {
+                    return categoryDict[cell]["name"];
+                } else {
+                    return '';
+                }
+
             },
             sort: true,
             headerStyle: (column, colIndex) => {
@@ -137,4 +142,52 @@ export const getCategoriesTableColumns = (actionFunction) => {
         }
     ];
     return categoriesTableColumns
+}
+
+export const getVendorCategoriesTableColumns = (categoryDict) => {
+    const catOptions = Object.keys(categoryDict).map(catId => {return {value: parseInt(catId), label: categoryDict[catId]["name"]}});
+    catOptions.sort((a, b) => {return a['value'] < b["value"] ? -1 : 1});
+    const vendorCategoriesTableColumns = [
+        {
+            dataField: "id",
+            text: "Vendor Id",
+            headerAlign: "center",
+            editable: false,
+            hidden: true,
+        },
+        {
+            dataField: "vendor",
+            text: "Vendor",
+            headerAlign: "center",
+            editable: false,
+            sort: true,
+            headerStyle: (column, colIndex) => {
+              return { width: '60%', textAlign: 'center' };
+            }
+        },
+        {
+            dataField: "categoryId",
+            text: "Category",
+            headerAlign: "center",
+            editable: true,
+            editor: {
+                type: Type.SELECT,
+//                 options: categoryList.map(item => {return({value: item, label: item})})
+                options: catOptions
+            },
+            formatter: (cell, row) => {
+                if (cell in categoryDict) {
+                    return categoryDict[cell]["name"];
+                } else {
+                    return '';
+                }
+
+            },
+            sort: true,
+            headerStyle: (column, colIndex) => {
+              return { width: '20%', textAlign: 'center' };
+            }
+        }
+    ];
+    return vendorCategoriesTableColumns
 }

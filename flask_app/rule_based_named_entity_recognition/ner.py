@@ -4,6 +4,7 @@ from rule_based_named_entity_recognition.GeoExtraction.geoextraction import GeoE
 from rule_based_named_entity_recognition.simplifications import sim1, sim2, sim3, sim4, sim5, sim6
 from rule_based_named_entity_recognition.extractions import ext1, ext2, ext3, ext4
 from difflib import SequenceMatcher
+import re
 
 
 def similar(a, b):
@@ -80,7 +81,10 @@ def extract(simp_list, ext1_list, ext2_list, ext3_list, ext4_list):
     return final_list
 
 
-def get_vendors_list(memos_list, output_file=None):
+def get_memo_vendor_mapping(memos_list, output_file=None):
+    """
+    Retuns a mapping
+    """
     unique_memos = list(set(memos_list))
     # creating output lists for each pattern
     ori = [x for x in unique_memos]
@@ -116,14 +120,18 @@ def get_vendors_list(memos_list, output_file=None):
             if len(cleaned_entry) == 0:
                 cleaned_entry = orig_memo
 
-        cleaned_output.append(cleaned_entry.strip())
+        cleaned_entry = re.sub('[#\d]', '', cleaned_entry).strip()
+        cleaned_entry = ' '.join(cleaned_entry.split())
+        cleaned_output.append(cleaned_entry)
 
+    print("done loop")
     vendor_mapping = {}
     for i in range(len(cleaned_output)):
         original_vendor = unique_memos[i]
         extracted_vendor = cleaned_output[i]
         vendor_mapping[original_vendor] = extracted_vendor
 
+    print("vendor loop")
     if output_file is not None:
         with open(output_file, "w") as output:
             writer = csv.writer(output, lineterminator='\n')
@@ -136,4 +144,6 @@ def get_vendors_list(memos_list, output_file=None):
 
 
 if __name__ == "__main__":
-    get_vendors_list(["RICHMOND HILL KEG #500 RICHMOND HILL, ON"], 'ner.csv')
+    # get_vendors_list(["RICHMOND HILL KEG #500 RICHMOND HILL, ON"], 'ner.csv')
+    a = get_memo_vendor_mapping(["RICHMOND HILL KEG #500 RICHMOND HILL, ON"])
+    print(a)

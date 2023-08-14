@@ -5,6 +5,7 @@ import Budgets from './budgets'
 import Transaction from './transactions'
 import React from 'react'
 import Insights from './insights'
+import Vendors from './vendors'
 import Login from './login'
 
 
@@ -20,6 +21,7 @@ const App = () => {
                     <Route exact path='/budgets' component={(props) => <Budgets />}/>
                     <Route exact path='/transactions' component={(props) => <Transaction />}/>
                     <Route exact path='/insights' component={(props) => <Insights />}/>
+                    <Route exact path='/vendors' component={(props) => <Vendors />}/>
                 </Switch>
             </BrowserRouter>
         </div>

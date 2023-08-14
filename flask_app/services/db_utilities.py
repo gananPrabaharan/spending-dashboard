@@ -38,6 +38,7 @@ def insert_multiple(table, row_list, existing_term=None, extra_string=None):
     elif len(row_list[0]) == len(table_columns):
         column_string = ", ".join([col for col in table_columns])
     else:
+        print(len(table_columns))
         raise ValueError
 
     if existing_term is not None:
@@ -71,9 +72,11 @@ def create_tables():
     """
     execute_query(Tables.TRANSACTIONS.create_query)
     execute_query(Tables.CATEGORIES.create_query)
-    insert_multiple(Tables.CATEGORIES, [[-1, ""]], "IGNORE")
+    insert_multiple(Tables.CATEGORIES, [[-1, 0, ""]], "IGNORE")
+    insert_multiple(Tables.CATEGORIES, [[0, 1000, "Payments"]], "IGNORE")
     execute_query(Tables.VENDORS.create_query)
     execute_query(Tables.VENDOR_CATEGORIES.create_query)
+    execute_query(Tables.NEW_VENDORS.create_query)
 
 
 def delete_table(table_name):
@@ -94,6 +97,9 @@ def delete_all_tables():
     """
     delete_table(Tables.TRANSACTIONS.name)
     delete_table(Tables.CATEGORIES.name)
+    delete_table(Tables.VENDORS.name)
+    delete_table(Tables.VENDOR_CATEGORIES.name)
+    delete_table(Tables.NEW_VENDORS.name)
 
 
 def execute_query(query, select_flag=False):
@@ -261,12 +267,36 @@ def insert_vendor_categories_changes(changes_list):
             elif change > 0:
                 increment_items.append([vend_id, cat_id, 1])
 
+    print(increment_items)
+    print(decrement_items)
     # Insert into table
     increment_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count+1"
     insert_multiple(Tables.VENDOR_CATEGORIES, increment_items, extra_string=increment_string)
 
     decrement_string = " ON CONFLICT(vendorId, categoryId) DO UPDATE SET count=count-1"
     insert_multiple(Tables.VENDOR_CATEGORIES, decrement_items, extra_string=decrement_string)
+
+
+def insert_new_vendor_categories_changes(changes_list):
+    """
+    Insert changes to vendor categories table
+
+    :param changes_list: nested list of changes. inner list format: [old_vend_id, old_cat_id, new_vend_id, new_cat_id]
+    :return:
+    """
+
+    vendor_query = "SELECT NewVendors.vendorId, NewVendors.vendorName, NewVendors.categoryId " \
+                            "FROM NewVendors "
+    vendor_results = execute_query(vendor_query, True)
+    vendor_name_mapping = {}
+    for vendor_id, vendor_name, cat_id in vendor_results:
+        vendor_name_mapping[vendor_id] = vendor_name
+
+    changes_insert = []
+    for vendor_id, category_id in changes_list:
+        changes_insert.append([vendor_id, vendor_name_mapping[vendor_id], category_id])
+
+    insert_multiple(Tables.NEW_VENDORS, changes_insert, "REPLACE")
 
 
 def db_setup():
@@ -277,6 +307,33 @@ def db_setup():
 
 if __name__ == "__main__":
     # delete_all_tables()
-    date_query = "SELECT * FROM Transactions WHERE date >= '2021-05-18' and date <= '2021-05-20'"
-    results = execute_query(date_query, True)
+
+    # date_query = "SELECT * FROM Transactions WHERE date >= '2021-05-18' and date <= '2021-05-20'"
+    # temp_query = 'select categoryId, name, budget from "Categories"'
+
+
+    execute_query(Tables.NEW_VENDORS.create_query)
+    vendor_category_query = "SELECT Vendors.vendorId, Vendors.vendorName, Categories.categoryId " \
+                            "FROM Vendors " \
+                            "JOIN VendorCategories " \
+                            "ON Vendors.vendorId = VendorCategories.vendorId " \
+                            "JOIN Categories " \
+                            "ON Categories.categoryId = VendorCategories.categoryId"
+
+    vendor_category_results = execute_query(vendor_category_query, True)
+    new_vendor_inserts = []
+    for vendor_id, vendor_name, cat_id in vendor_category_results:
+        new_vendor_inserts.append([vendor_id, vendor_name, cat_id])
+
+
+    # insert_multiple(Tables.NEW_VENDORS, new_vendor_inserts)
+    temp_query = "SELECT * FROM NewVendors where NewVendors.categoryId != -1;"
+    results = execute_query(temp_query, True)
     print(results)
+
+    temp_query = "SELECT * FROM Categories;"
+    results = execute_query(temp_query, True)
+    print(results)
+
+
+

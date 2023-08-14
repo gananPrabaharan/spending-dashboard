@@ -27,3 +27,10 @@ export const retrieveTransactions = async (startDate, endDate) => {
     }
     return axios.get(url, options);
 }
+
+export const retrieveVendorCategories = async () => {
+    // Gets list of category dictionaries: {id: catId, name: catName}
+    const url = SERVER + "api/vendor_categories";
+    const options = getRequestOptions("GET");
+    return axios.get(url, options);
+}
